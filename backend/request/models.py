@@ -4,6 +4,7 @@ from common.models import CostUnit, DateTimeMixin
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.utils.functional import cached_property
 from library.models import Library
 from sample.models import Sample
 from simple_history.models import HistoricalRecords
@@ -114,7 +115,7 @@ class Request(DateTimeMixin):
     def __str__(self):
         return self.name
 
-    @property
+    @cached_property
     def records(self):
         return list(itertools.chain(self.samples.all(), self.libraries.all()))
 

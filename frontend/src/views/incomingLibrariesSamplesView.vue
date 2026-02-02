@@ -897,7 +897,6 @@ export default {
     async handleRemoveTemplate(fileId) {
       try {
         await incomingLibrariesApi.deleteTemplate(fileId);
-        // this.fetchedIncomingLibrariesAndSamplesTemplates.splice(index, 1); // This logic needs index. simpler to re-fetch or find index
         this.fetchExportTemplates();
         showNotification("File removed successfully.", "success");
       } catch (error) {

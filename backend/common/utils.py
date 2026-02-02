@@ -5,6 +5,7 @@ from time import time
 
 from django.db import connection
 from django.utils import timezone
+from django.contrib.auth import get_user_model
 
 
 def timeit(func):
@@ -89,16 +90,9 @@ def is_iterable(obj):
 
 
 def retrieve_group_items(request, queryset):
-    from django.contrib.auth import get_user_model
-
     User = get_user_model()
-    this_lab_group = User.objects.all().filter(pi__in=[request.user.pi])
-    if is_iterable(this_lab_group):
-        queryset = queryset.filter(user__in=this_lab_group)
-    else:
-        assert isinstance(this_lab_group, User)
-        queryset = queryset.filter(user=this_lab_group)
-    return queryset
+    this_lab_group = User.objects.filter(pi=request.user.pi)
+    return queryset.filter(user__in=this_lab_group)
 
 
 def cast_index_number(index_number):
