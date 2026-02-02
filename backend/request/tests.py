@@ -6,7 +6,7 @@ from common.tests import BaseTestCase
 from common.utils import get_random_name
 from django.contrib.auth import get_user_model
 
-# from django.core.files.base import ContentFile
+from django.core.files.base import ContentFile
 from django.test import TestCase
 from library.tests import create_library
 from sample.tests import create_sample
@@ -73,12 +73,19 @@ class TestRequestModel(TestCase):
 
         request.libraries.add(library)
         request.samples.add(sample)
-        request.delete()
 
-        # TODO: create and delete files
+        # Create and add a file
+        f = ContentFile("test content")
+        file_req = FileRequest(name="Test File")
+        file_req.file.save("test.txt", f)
+        file_req.save()
+        request.files.add(file_req)
+
+        request.delete()
 
         self.assertEqual(Library.objects.filter(pk=library.pk).count(), 0)
         self.assertEqual(Sample.objects.filter(pk=sample.pk).count(), 0)
+        self.assertEqual(FileRequest.objects.filter(pk=file_req.pk).count(), 0)
 
     def test_total_records_count(self):
         request = Request(user=self.user)
