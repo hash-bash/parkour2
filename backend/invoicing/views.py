@@ -245,6 +245,32 @@ class InvoicingViewSet(viewsets.ReadOnlyModelViewSet):
         ]
         write_header(ws, row_num, header)
 
+        # Bulk fetch ReadLength names
+        all_read_length_pks = set()
+        for item in data:
+            if item["read_length"]:
+                all_read_length_pks.update(item["read_length"])
+
+        read_length_map = {
+            rl.pk: rl.name
+            for rl in ReadLength.objects.filter(
+                archived=False, pk__in=all_read_length_pks
+            )
+        }
+
+        # Bulk fetch LibraryProtocol names
+        all_protocol_pks = set()
+        for item in data:
+            if item["library_protocol"]:
+                all_protocol_pks.add(item["library_protocol"])
+
+        protocol_map = {
+            lp.pk: lp.name
+            for lp in LibraryProtocol.objects.filter(
+                archived=False, pk__in=all_protocol_pks
+            )
+        }
+
         for item in data:
             if item["library_protocol"] == "":
                 continue
@@ -267,19 +293,15 @@ class InvoicingViewSet(viewsets.ReadOnlyModelViewSet):
                 )
             )
 
-            read_lengths = "; ".join(
-                ReadLength.objects.filter(archived=False, pk__in=item["read_length"])
-                .order_by("name")
-                .values_list("name", flat=True)
-            )
+            names = [
+                read_length_map.get(pk)
+                for pk in item["read_length"]
+                if pk in read_length_map
+            ]
+            names.sort()
+            read_lengths = "; ".join(names)
 
-            protocol_name = (
-                LibraryProtocol.objects.filter(
-                    archived=False, pk=item["library_protocol"]
-                )
-                .values_list("name", flat=True)
-                .first()
-            )
+            protocol_name = protocol_map.get(item["library_protocol"])
             if not protocol_name:
                 # Legacy requests may reference deleted or archived protocols.
                 protocol_name = "Unknown"
