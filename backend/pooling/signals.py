@@ -1,5 +1,6 @@
 from django.db.models.signals import m2m_changed, post_save
 from django.dispatch import receiver
+from django.utils import timezone
 from index_generator.models import Pool
 from library_preparation.models import LibraryPreparation
 from sample.models import Sample
@@ -16,11 +17,14 @@ def update_libraries_create_pooling_obj(sender, instance, action, **kwargs):
     if action == "post_add":
         instance.libraries.all().update(is_pooled=True)
 
-        # TODO: maybe there is a better way to create multiple objects at once
-        for library in instance.libraries.all():
-            obj, created = Pooling.objects.get_or_create(library=library)
-            if created:
-                obj.save()
+        # Libraries that are in the pool but don't have a Pooling object yet
+        libraries_without_pooling = instance.libraries.filter(pooling__isnull=True)
+        now = timezone.now()
+        new_pooling_objects = [
+            Pooling(library=library, create_time=now, update_time=now)
+            for library in libraries_without_pooling
+        ]
+        Pooling.objects.bulk_create(new_pooling_objects)
 
 
 @receiver(post_save, sender=Sample)
