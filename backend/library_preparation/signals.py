@@ -25,8 +25,10 @@ def update_samples(sender, instance, action, **kwargs):
             ),
         )
 
-        # TODO: maybe there is a better way to create multiple objects at once
-        for sample in instance.samples.all():
-            obj, created = LibraryPreparation.objects.get_or_create(sample=sample)
-            if created:
-                obj.save()
+        # Create LibraryPreparation objects for all samples in the pool.
+        # Use bulk_create with ignore_conflicts=True to handle existing objects
+        # efficiently (INSERT ... ON CONFLICT DO NOTHING).
+        LibraryPreparation.objects.bulk_create(
+            [LibraryPreparation(sample=sample) for sample in instance.samples.all()],
+            ignore_conflicts=True,
+        )
