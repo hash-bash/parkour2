@@ -1,17 +1,6 @@
 <template>
   <div class="parent-container">
-    <div class="header">
-      <div class="header-logo" style="display: inline; margin-right: 10px">
-        <img
-          :src="iconDutiesHeader"
-          alt="Manage Duties"
-          width="42"
-          height="42"
-          style="display: block"
-        />
-      </div>
-      <div class="header-title" style="display: inline">Manage Duties</div>
-    </div>
+    <ViewHeader :icon="iconDutiesHeader" title="Manage Duties" />
     <div class="duties-body">
       <div class="table-container duties-table-panel">
         <div class="duties-card">
@@ -189,6 +178,7 @@
 
 <script>
 import { AgGridVue } from "ag-grid-vue3";
+import ViewHeader from "../components/ViewHeader.vue";
 import {
   showNotification,
   handleError,
@@ -214,7 +204,8 @@ const urlStringStart = urlStringStartsWith();
 export default {
   name: "Duties",
   components: {
-    AgGridVue
+    AgGridVue,
+    ViewHeader
   },
   data() {
     return {

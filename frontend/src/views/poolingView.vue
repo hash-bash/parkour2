@@ -1,160 +1,42 @@
 <template>
   <div class="parent-container">
     <!-- Loading overlay -->
-    <div v-if="loading || fakeLoading" class="loading-overlay">
+    <LoadingOverlay :visible="loading || fakeLoading" :fakeLoading="fakeLoading">
       <div v-if="!fakeLoading" class="spinner"></div>
       <p v-if="!fakeLoading">
         Loading <span style="font-weight: bold">Pooling</span>...
       </p>
-    </div>
+    </LoadingOverlay>
 
     <!-- Header -->
-    <div class="header">
-      <div class="header-logo" style="display: inline; margin-right: 10px">
-        <img
-          :src="iconPoolingHeader"
-          alt="Pooling"
-          width="42"
-          height="42"
-          style="display: block"
-        />
-      </div>
-      <div class="header-title" style="display: inline">Pooling</div>
+    <ViewHeader :icon="iconPoolingHeader" title="Pooling">
+      <SearchBar v-model="searchQuery" />
 
-      <!-- Sticky right section for search, and select columns -->
-      <div class="sticky-actions">
-        <div class="search-bar">
-          <input
-            ref="searchInput"
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search"
-          />
+      <ColumnSelector
+        :columns="columnsList"
+        @toggle-visibility="toggleColumnVisibility"
+        @reset-visibility="resetColumnVisibility"
+        @reset-widths="resetColumnWidths"
+      />
+
+      <div class="button-popup-wrapper">
+        <button class="header-button" @click="toggleGroups">
           <font-awesome-icon
-            icon="fa-solid fa-magnifying-glass"
-            style="color: darkgrey"
-          />
-        </div>
-        <div class="button-popup-wrapper">
-          <button
-            class="header-button"
-            id="toggleSelectColumnsButton"
-            @click="toggleSelectColumns"
-          >
-            <font-awesome-icon
-              icon="fa-solid fa-columns"
-              style="color: white"
-            />
-            <span> Select Columns </span>
-          </button>
-          <div
-            id="selectColumnsPopup"
-            v-if="showSelectColumns"
-            class="button-popup-container"
-            style="
-              left: -50px;
-              width: 250px;
-              max-height: 473px;
-              display: flex;
-              flex-direction: column;
-              padding: 10px 10px 5px 10px;
-            "
-          >
-            <ul
-              style="
-                padding: 5px 7px 7px;
-                margin: 0;
-                flex-grow: 1;
-                overflow-y: auto;
-              "
-            >
-              <li
-                v-for="(column, index) in columnsList"
-                :key="index"
-                style="list-style: none"
-              >
-                <template
-                  v-if="
-                    column.field !== 'selected' ||
-                    (column.field === 'selected' && column.visible == false)
-                  "
-                >
-                  <label
-                    :style="{
-                      backgroundColor: column.columns ? '#33333310' : 'white',
-                      cursor: column.columns ? 'default' : 'pointer'
-                    }"
-                  >
-                    <input
-                      v-if="!column.columns"
-                      type="checkbox"
-                      v-model="column.visible"
-                      @change="toggleColumnVisibility(column)"
-                    />
-                    <font-awesome-icon
-                      v-if="column.columns"
-                      icon="fa-solid fa-caret-down"
-                      style="
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        border: 2px solid black;
-                        height: 18px;
-                        width: 18px;
-                        border-radius: 4px;
-                        text-align: center;
-                        background-color: orange;
-                        color: white;
-                      "
-                    />
-                    <span>{{ column.title }}</span>
-                  </label>
-                </template>
-              </li>
-            </ul>
-            <div
-              style="
-                padding-top: 8px;
-                border-top: 1px solid #eee;
-                display: flex;
-                flex-direction: column;
-              "
-            >
-              <button @click="resetColumnVisibility" class="reset-button">
-                Reset Visibility Settings
-              </button>
-              <button
-                style="margin-bottom: 5px"
-                @click="resetColumnWidths"
-                class="reset-button"
-              >
-                Reset Width Settings
-              </button>
-            </div>
-          </div>
-        </div>
-        <div class="button-popup-wrapper">
-          <button class="header-button" @click="toggleGroups">
-            <font-awesome-icon
-              icon="fa-solid fa-layer-group"
-              style="color: white"
-            />
-            <span> Toggle Views </span>
-          </button>
-        </div>
-        <button
-          class="header-button"
-          id="openExportPopupButton"
-          @click="handleExportClick"
-        >
-          <font-awesome-icon
-            icon="fa-solid fa-file-excel"
+            icon="fa-solid fa-layer-group"
             style="color: white"
           />
-          <span> Export to Excel </span>
+          <span> Toggle Views </span>
         </button>
       </div>
-    </div>
+      <button
+        class="header-button"
+        id="openExportPopupButton"
+        @click="handleExportClick"
+      >
+        <font-awesome-icon icon="fa-solid fa-file-excel" style="color: white" />
+        <span> Export to Excel </span>
+      </button>
+    </ViewHeader>
 
     <!-- Main content section with table -->
     <div class="table-container">
@@ -177,258 +59,45 @@
     </div>
 
     <!-- Popup window -->
-    <div v-if="showPopupWindow" class="popup-overlay">
-      <div
-        class="popup-container confirmation-popup"
-        :style="{
-          height: popupContents.popupHeight + 'px',
-          width: popupContents.popupWidth + 'px'
-        }"
-      >
-        <div class="popup-header">
-          <img
-            :src="iconConfirmationAlert"
-            alt="Confirmation"
-            width="42"
-            height="42"
-            style="display: block"
-          />
-          <span class="popup-title">{{ popupContents.popupTitle }}</span>
-          <button class="popup-close-button" @click="showPopupWindow = false">
-            &times;
-          </button>
-        </div>
-        <div class="popup-body">
-          <div v-html="popupContents.popupDescription"></div>
-          <div
-            v-if="popupContents.popupList && popupContents.popupList.length > 0"
-            class="popup-scrollable-content"
-          >
-            <div class="popup-scrollable-content-inner">
-              <ol style="padding-left: 25px">
-                <li v-for="item in popupContents.popupList" :key="item">
-                  <span style="font-weight: bold">{{ item.barcode }}</span>
-                  <span>{{ " - " + item.name }}</span>
-                </li>
-              </ol>
-            </div>
-          </div>
-        </div>
-        <div class="popup-footer">
-          <button class="popup-button yes-button" @click="popupContents.onYes">
-            Yes
-          </button>
-          <button class="popup-button" @click="popupContents.onNo">No</button>
-        </div>
-      </div>
-    </div>
+    <ConfirmationPopup
+      :show="showPopupWindow"
+      :title="popupContents.popupTitle"
+      :description="popupContents.popupDescription"
+      :list="popupContents.popupList"
+      :icon="iconConfirmationAlert"
+      :height="popupContents.popupHeight"
+      :width="popupContents.popupWidth"
+      yesButtonText="Yes"
+      noButtonText="No"
+      @yes="popupContents.onYes"
+      @no="popupContents.onNo"
+      @close="showPopupWindow = false"
+    />
 
     <!-- Popup for Export Options -->
-    <div
-      v-if="showExportPopup"
-      class="popup-overlay"
-      @dragover.prevent="handleDragOver"
-      @drop="handleDrop"
-      @dragenter="handleDragEnter"
-      @dragleave="handleDragLeave"
-      :class="{ 'drag-over': isDragOver }"
-    >
-      <div class="drag-drop-indicator">
-        <div
-          style="
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 200px;
-          "
-        >
-          <p>
-            Drop <span style="font-weight: bold">XLSX file</span> here to upload
-            as <span style="font-weight: bold">template</span>
-          </p>
-        </div>
-      </div>
-      <div
-        v-if="!isDragOver"
-        class="popup-container export-popup"
-        :style="{ width: '670px', height: '500px' }"
-      >
-        <div class="popup-header">
-          <span class="popup-title">Export Options</span>
-          <span
-            class="popup-info-button"
-            @mouseover="showExportHelpTooltip = true"
-            @mouseleave="showExportHelpTooltip = false"
-          >
-            ?
-            <div v-if="showExportHelpTooltip" class="tooltip-box">
-              <span style="font-weight: bold">INSTRUCTIONS:</span>
-              <ol>
-                <li>
-                  To create custom templates, export the original sheet named
-                  <span style="font-weight: bold">'Parkour'</span> by selecting
-                  the
-                  <span style="font-weight: bold"
-                    >'Export without any additional sheets'</span
-                  >
-                  option.
-                </li>
-                <li>
-                  Add new custom sheets to this exported file, which will serve
-                  as templates.
-                </li>
-                <li>
-                  Upload the modified file, containing both the original
-                  <span style="font-weight: bold">'Parkour'</span> sheet and
-                  newly added
-                  <span style="font-weight: bold">custom sheets</span>. After
-                  uploading the file will appear in the list.
-                </li>
-                <li>
-                  The template is now ready! When you select this modified file
-                  from the list, the system will replace the
-                  <span style="font-weight: bold">'Parkour'</span> sheet with
-                  updated data while keeping all additional sheets intact.
-                </li>
-              </ol>
-            </div>
-          </span>
-          <button class="popup-close-button" @click="showExportPopup = false">
-            &times;
-          </button>
-        </div>
-        <div class="popup-body">
-          <div class="export-section" style="height: 100%">
-            <div style="font-weight: bold; margin-bottom: 8px">
-              Upload additional excel sheet templates to append:
-            </div>
-            <div class="file-list-section" style="height: 280px">
-              <div class="file-item">
-                <div class="file-info">
-                  <img
-                    :src="iconExportTemplateFile"
-                    alt="Export without any additional sheets"
-                    width="24"
-                    height="24"
-                    style="display: block"
-                  />
-                  <span>Export without any additional sheets</span>
-                </div>
-                <div class="file-actions">
-                  <div
-                    class="file-actions-radio-button"
-                    style="border: none; margin-right: 5px"
-                  >
-                    <input
-                      type="radio"
-                      title="Select"
-                      id="without-file"
-                      value="without-file"
-                      v-model="selectedFile"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div
-                v-for="(file, index) in fetchedPoolingTemplates"
-                :key="index"
-                class="file-item"
-              >
-                <div class="file-info">
-                  <img
-                    :src="iconExportTemplateFileLines"
-                    :alt="file.name"
-                    width="24"
-                    height="24"
-                    style="display: block"
-                  />
-                  <span>{{ file.name }}</span>
-                </div>
-                <div class="file-actions">
-                  <button
-                    @click="downloadExportTemplate(file)"
-                    class="download-button"
-                    title="Download Original File"
-                  >
-                    <img
-                      :src="iconExportDownload"
-                      alt="Download"
-                      width="24"
-                      height="24"
-                      style="display: block"
-                    />
-                  </button>
-                  <button
-                    @click="removeExportTemplate(index)"
-                    class="remove-button"
-                    title="Remove File"
-                  >
-                    <img
-                      :src="iconExportRemove"
-                      alt="Remove"
-                      width="24"
-                      height="24"
-                      style="display: block"
-                    />
-                  </button>
-                  <div class="file-actions-radio-button">
-                    <input
-                      type="radio"
-                      title="Select File"
-                      :id="'file-radio-' + index"
-                      :value="file"
-                      v-model="selectedFile"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="popup-footer">
-          <div class="file-upload-section">
-            <label
-              for="file-upload"
-              class="file-upload-label"
-              title="Upload additional sheet to append to the exported sheet."
-            >
-              <img
-                :src="iconExportUpload"
-                alt="Upload"
-                width="24"
-                height="24"
-                style="display: block; margin-right: 4px"
-              />
-              <span>Upload</span>
-            </label>
-            <input
-              id="file-upload"
-              type="file"
-              accept=".xlsx"
-              @change="uploadExportTemplate"
-              style="display: none"
-            />
-          </div>
-          <button class="popup-button yes-button" @click="handleExport">
-            OK
-          </button>
-          <button
-            class="popup-button"
-            @click="
-              showExportPopup = false;
-              selectedFile = 'without-file';
-            "
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
+    <ExportPopup
+      :show="showExportPopup"
+      :templates="fetchedPoolingTemplates"
+      :hasSelectedRows="true"
+      :initialExportSelection="'selected'"
+      :isStaffUser="true"
+      @close="showExportPopup = false"
+      @export="handleExportAction"
+      @upload="handleFileUpload"
+      @download-template="downloadExportTemplate"
+      @remove-template="removeExportTemplate"
+    />
   </div>
 </template>
 
 <script lang="jsx">
-import TabulatorTable from "../components/tabulatorTable.vue";
+import TabulatorTable from "../components/TabulatorTable.vue";
+import ViewHeader from "../components/ViewHeader.vue";
+import LoadingOverlay from "../components/LoadingOverlay.vue";
+import SearchBar from "../components/SearchBar.vue";
+import ConfirmationPopup from "../components/ConfirmationPopup.vue";
+import ExportPopup from "../components/ExportPopup.vue";
+import ColumnSelector from "../components/ColumnSelector.vue";
 import { saveAs } from "file-saver";
 import {
   showNotification,
@@ -444,37 +113,32 @@ import {
 } from "../constants/poolingConsts";
 import iconPoolingHeader from "../assets/icons/header_pooling.svg";
 import iconConfirmationAlert from "../assets/icons/alert_confirmation.svg";
-import iconExportTemplateFile from "../assets/icons/export_template.svg";
-import iconExportTemplateFileLines from "../assets/icons/export_template_lines.svg";
-import iconExportDownload from "../assets/icons/export_download.svg";
-import iconExportRemove from "../assets/icons/export_remove.svg";
-import iconExportUpload from "../assets/icons/export_upload.svg";
+
 const axiosRef = createAxiosObject();
 const urlStringStart = urlStringStartsWith();
 
 export default {
   name: "Pooling",
   components: {
-    TabulatorTable
+    TabulatorTable,
+    ViewHeader,
+    LoadingOverlay,
+    SearchBar,
+    ConfirmationPopup,
+    ExportPopup,
+    ColumnSelector
   },
   data() {
     return {
       iconPoolingHeader,
       iconConfirmationAlert,
-      iconExportTemplateFile,
-      iconExportTemplateFileLines,
-      iconExportDownload,
-      iconExportRemove,
-      iconExportUpload,
       tabulatorInstance: null,
       loading: true,
       fakeLoading: false,
-      isDragOver: false,
       librariesSamplesList: [],
       columnsList: [],
       showPopupWindow: false,
       showExportPopup: false,
-      showExportHelpTooltip: false,
       fetchedPoolingTemplates: [],
       selectedFile: "without-file",
       popupContents: {
@@ -558,12 +222,7 @@ export default {
       }
     },
     showPopupWindow(newVal) {
-      if (newVal) {
-        this.$nextTick(() => {
-          const yesButton = document.querySelector(".popup-button.yes-button");
-          yesButton.focus();
-        });
-      } else {
+      if (!newVal) {
         document.getElementsByClassName("tabulator-cell")[1]?.click();
       }
     }
@@ -671,7 +330,7 @@ export default {
       this.columnsList = applySettings(columnDefs);
     },
     handleOutsideClick(event) {
-      const selectColumnsPopup = this.$el.querySelector("#selectColumnsPopup");
+      const selectColumnsPopup = this.$el.querySelector(".button-popup-container");
       const selectColumnsButton = this.$el.querySelector(
         "#toggleSelectColumnsButton"
       );
@@ -1081,8 +740,7 @@ export default {
         handleError(error);
       }
     },
-    async uploadExportTemplate(event) {
-      const file = event.target.files[0];
+    handleFileUpload(file) {
       if (
         file &&
         file.type ===
@@ -1090,25 +748,28 @@ export default {
       ) {
         const formData = new FormData();
         formData.append("file", file);
-        try {
-          await axiosRef.post(
-            `${urlStringStart}/api/pooling-templates/upload/`,
-            formData,
-            {
-              headers: {
-                "Content-Type": "multipart/form-data"
-              }
-            }
-          );
-          showNotification("File uploaded successfully.", "success");
-          this.fetchExportTemplates();
-        } catch (error) {
-          showNotification("Error uploading file: " + error, "error");
-        } finally {
-          this.selectedFile = "without-file";
-        }
+        this.uploadExportTemplate(formData);
       } else {
         showNotification("Please upload a valid XLSX file.", "error");
+      }
+    },
+    async uploadExportTemplate(formData) {
+      try {
+        await axiosRef.post(
+          `${urlStringStart}/api/pooling-templates/upload/`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data"
+            }
+          }
+        );
+        showNotification("File uploaded successfully.", "success");
+        this.fetchExportTemplates();
+      } catch (error) {
+        showNotification("Error uploading file: " + error, "error");
+      } finally {
+        this.selectedFile = "without-file";
       }
     },
     async downloadExportTemplate(file) {
@@ -1160,6 +821,10 @@ export default {
         return;
       }
       this.showExportPopup = true;
+    },
+    handleExportAction({ selection, template }) {
+      this.selectedFile = template;
+      this.handleExport();
     },
     async handleExport() {
       try {
@@ -1214,47 +879,6 @@ export default {
         this.fakeLoadingStop();
         this.showExportPopup = false;
         this.selectedFile = "without-file";
-      }
-    },
-    handleDragOver(e) {
-      e.preventDefault();
-      this.isDragOver = true;
-    },
-    handleDragEnter(e) {
-      e.preventDefault();
-      this.isDragOver = true;
-    },
-    handleDragLeave(e) {
-      if (!e.currentTarget.contains(e.relatedTarget)) {
-        this.isDragOver = false;
-      }
-    },
-    handleDrop(e) {
-      e.preventDefault();
-      this.isDragOver = false;
-
-      const files = e.dataTransfer.files;
-      if (files.length > 1) {
-        showNotification(
-          "Please upload only one XLSX file at a time.",
-          "error"
-        );
-      } else this.processUploadedFile(files[0]);
-    },
-    processUploadedFile(file) {
-      if (
-        file &&
-        file.type ===
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      ) {
-        const event = {
-          target: {
-            files: [file]
-          }
-        };
-        this.uploadExportTemplate(event);
-      } else {
-        showNotification("Please upload a valid XLSX file.", "error");
       }
     },
     createPopupWindow(
