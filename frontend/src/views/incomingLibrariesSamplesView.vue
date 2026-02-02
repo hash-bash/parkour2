@@ -1,24 +1,13 @@
 <template>
   <div class="parent-container">
-    <!-- Loading overlay -->
-    <div v-if="loading || fakeLoading" class="loading-overlay">
-      <div v-if="!fakeLoading" class="spinner"></div>
-      <p v-if="!fakeLoading">
-        Loading <span style="font-weight: bold">Incoming Libraries</span> and
-        <span style="font-weight: bold">Samples</span>...
-      </p>
-    </div>
+    <LoadingOverlay :visible="loading || fakeLoading" :fakeLoading="fakeLoading"
+      message="Loading <span style='font-weight: bold'>Incoming Libraries</span> and <span style='font-weight: bold'>Samples</span>..." />
 
     <!-- Header -->
     <div class="header">
       <div class="header-logo" style="display: inline; margin-right: 10px">
-        <img
-          :src="iconIncomingHeader"
-          alt="Incoming Libraries and Samples"
-          width="42"
-          height="42"
-          style="display: block"
-        />
+        <img :src="iconIncomingHeader" alt="Incoming Libraries and Samples" width="42" height="42"
+          style="display: block" />
       </div>
       <div class="header-title" style="display: inline">
         Incoming Libraries and Samples
@@ -27,64 +16,42 @@
       <!-- Sticky right section for search, advanced filters, and select columns -->
       <div class="sticky-actions">
         <div class="search-bar">
-          <input
-            ref="searchInput"
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search"
-          />
-          <font-awesome-icon
-            icon="fa-solid fa-magnifying-glass"
-            style="color: darkgrey"
-          />
+          <input ref="searchInput" v-model="searchQuery" type="text" placeholder="Search" />
+          <font-awesome-icon icon="fa-solid fa-magnifying-glass" style="color: darkgrey" />
         </div>
         <div class="button-popup-wrapper">
-          <button
-            class="header-button"
-            id="toggleAdvancedFiltersButton"
-            @click="toggleAdvancedFilters"
-          >
+          <button class="header-button" id="toggleAdvancedFiltersButton" @click="toggleAdvancedFilters">
             <font-awesome-icon icon="fa-solid fa-filter" style="color: white" />
             <span> Advanced Filters </span>
           </button>
-          <div
-            id="advancedFiltersPopup"
-            v-if="showAdvancedFilters"
-            class="button-popup-container"
-            style="width: 250px; left: -50px"
-          >
+          <div id="advancedFiltersPopup" v-if="showAdvancedFilters" class="button-popup-container"
+            style="width: 250px; left: -50px">
             <label>
-              <div
-                style="
+              <div style="
                   display: flex;
                   justify-content: center;
                   text-align: center;
-                "
-              >
+                ">
                 <input type="checkbox" v-model="filters.showLibraries" />
               </div>
               <div><span style="font-weight: bold">Show</span> Libraries</div>
             </label>
             <label>
-              <div
-                style="
+              <div style="
                   display: flex;
                   justify-content: center;
                   text-align: center;
-                "
-              >
+                ">
                 <input type="checkbox" v-model="filters.showSamples" />
               </div>
               <div><span style="font-weight: bold">Show</span> Samples</div>
             </label>
             <label>
-              <div
-                style="
+              <div style="
                   display: flex;
                   justify-content: center;
                   text-align: center;
-                "
-              >
+                ">
                 <input type="checkbox" v-model="filters.onlySamplesSubmitted" />
               </div>
               <div>
@@ -93,13 +60,11 @@
               </div>
             </label>
             <label>
-              <div
-                style="
+              <div style="
                   display: flex;
                   justify-content: center;
                   text-align: center;
-                "
-              >
+                ">
                 <input type="checkbox" v-model="filters.onlyGmo" />
               </div>
               <div>
@@ -109,65 +74,36 @@
           </div>
         </div>
         <div class="button-popup-wrapper">
-          <button
-            class="header-button"
-            id="toggleSelectColumnsButton"
-            @click="toggleSelectColumns"
-          >
-            <font-awesome-icon
-              icon="fa-solid fa-columns"
-              style="color: white"
-            />
+          <button class="header-button" id="toggleSelectColumnsButton" @click="toggleSelectColumns">
+            <font-awesome-icon icon="fa-solid fa-columns" style="color: white" />
             <span> Select Columns </span>
           </button>
-          <div
-            id="selectColumnsPopup"
-            v-if="showSelectColumns"
-            class="button-popup-container"
-            style="
+          <div id="selectColumnsPopup" v-if="showSelectColumns" class="button-popup-container" style="
               left: -50px;
               width: 250px;
               max-height: 473px;
               display: flex;
               flex-direction: column;
               padding: 10px 10px 5px 10px;
-            "
-          >
-            <ul
-              style="
+            ">
+            <ul style="
                 padding: 5px 7px 7px;
                 margin: 0;
                 flex-grow: 1;
                 overflow-y: auto;
-              "
-            >
-              <li
-                v-for="(column, index) in columnsList"
-                :key="index"
-                style="list-style: none"
-              >
-                <template
-                  v-if="
-                    column.field !== 'selected' ||
-                    (column.field === 'selected' && column.visible == false)
-                  "
-                >
-                  <label
-                    :style="{
-                      backgroundColor: column.columns ? '#33333320' : 'white',
-                      cursor: column.columns ? 'default' : 'pointer'
-                    }"
-                  >
-                    <input
-                      v-if="!column.columns"
-                      type="checkbox"
-                      v-model="column.visible"
-                      @change="toggleColumnVisibility(column)"
-                    />
-                    <font-awesome-icon
-                      v-if="column.columns"
-                      icon="fa-solid fa-caret-down"
-                      style="
+              ">
+              <li v-for="(column, index) in columnsList" :key="index" style="list-style: none">
+                <template v-if="
+                  column.field !== 'selected' ||
+                  (column.field === 'selected' && column.visible == false)
+                ">
+                  <label :style="{
+                    backgroundColor: column.columns ? '#33333320' : 'white',
+                    cursor: column.columns ? 'default' : 'pointer'
+                  }">
+                    <input v-if="!column.columns" type="checkbox" v-model="column.visible"
+                      @change="toggleColumnVisibility(column)" />
+                    <font-awesome-icon v-if="column.columns" icon="fa-solid fa-caret-down" style="
                         display: flex;
                         align-items: center;
                         justify-content: center;
@@ -178,23 +114,14 @@
                         text-align: center;
                         background-color: orange;
                         color: white;
-                      "
-                    />
+                      " />
                     <span>{{ column.title }}</span>
                   </label>
                   <ul v-if="column.columns" style="padding-left: 0px">
-                    <li
-                      v-for="(subColumn, subIndex) in column.columns"
-                      :key="subIndex"
-                      style="list-style: none"
-                    >
+                    <li v-for="(subColumn, subIndex) in column.columns" :key="subIndex" style="list-style: none">
                       <label>
-                        <input
-                          type="checkbox"
-                          style="width: 20px !important"
-                          :checked="subColumn.visible"
-                          @change="toggleColumnVisibility(subColumn)"
-                        />
+                        <input type="checkbox" style="width: 20px !important" :checked="subColumn.visible"
+                          @change="toggleColumnVisibility(subColumn)" />
                         <span style="width: 100%">{{ subColumn.title }}</span>
                       </label>
                     </li>
@@ -202,22 +129,16 @@
                 </template>
               </li>
             </ul>
-            <div
-              style="
+            <div style="
                 padding-top: 8px;
                 border-top: 1px solid #eee;
                 display: flex;
                 flex-direction: column;
-              "
-            >
+              ">
               <button @click="resetColumnVisibility" class="reset-button">
                 Reset Visibility Settings
               </button>
-              <button
-                style="margin-bottom: 5px"
-                @click="resetColumnWidths"
-                class="reset-button"
-              >
+              <button style="margin-bottom: 5px" @click="resetColumnWidths" class="reset-button">
                 Reset Width Settings
               </button>
             </div>
@@ -225,22 +146,12 @@
         </div>
         <div class="button-popup-wrapper">
           <button class="header-button" @click="toggleGroups">
-            <font-awesome-icon
-              icon="fa-solid fa-layer-group"
-              style="color: white"
-            />
+            <font-awesome-icon icon="fa-solid fa-layer-group" style="color: white" />
             <span> Toggle Views </span>
           </button>
         </div>
-        <button
-          class="header-button"
-          id="openExportPopupButton"
-          @click="handleExportClick"
-        >
-          <font-awesome-icon
-            icon="fa-solid fa-file-excel"
-            style="color: white"
-          />
+        <button class="header-button" id="openExportPopupButton" @click="handleExportClick">
+          <font-awesome-icon icon="fa-solid fa-file-excel" style="color: white" />
           <span> Export to Excel </span>
         </button>
       </div>
@@ -248,14 +159,8 @@
 
     <!-- Main content section with table -->
     <div class="table-container">
-      <TabulatorTable
-        v-if="!loading"
-        ref="tabulatorTableRef"
-        :rowData="librariesSamplesList"
-        :columnDefs="columnsList"
-        groupBy="request_name"
-        :groupSort="{ field: 'request_name', order: 'desc' }"
-        :groupStartOpen="false"
+      <TabulatorTable v-if="!loading" ref="tabulatorTableRef" :rowData="librariesSamplesList" :columnDefs="columnsList"
+        groupBy="request_name" :groupSort="{ field: 'request_name', order: 'desc' }" :groupStartOpen="false"
         :tableOptions="{
           ...tableOptions,
           onBatchCellValueChanged,
@@ -263,342 +168,63 @@
           fakeLoadingStop,
           handleColumnResized,
           handleColumnVisibilityChanged
-        }"
-      />
+        }" />
     </div>
 
     <!-- Popup window -->
-    <div v-if="showPopupWindow" class="popup-overlay">
-      <div
-        class="popup-container confirmation-popup"
-        :style="{
-          height: popupContents.popupHeight + 'px',
-          width: popupContents.popupWidth + 'px'
-        }"
-      >
-        <div class="popup-header">
-          <img
-            :src="iconConfirmationAlert"
-            alt="Confirmation"
-            width="42"
-            height="42"
-            style="display: block"
-          />
-          <span class="popup-title">{{ popupContents.popupTitle }}</span>
-          <button class="popup-close-button" @click="showPopupWindow = false">
-            &times;
-          </button>
-        </div>
-        <div class="popup-body">
-          <div v-html="popupContents.popupDescription"></div>
-          <div
-            v-if="popupContents.popupList && popupContents.popupList.length > 0"
-            class="popup-scrollable-content"
-          >
-            <div class="popup-scrollable-content-inner">
-              <ol style="padding-left: 25px">
-                <li v-for="item in popupContents.popupList" :key="item">
-                  <span style="font-weight: bold">{{ item.barcode }}</span>
-                  <span>{{ " - " + item.name }}</span>
-                </li>
-              </ol>
-            </div>
-          </div>
-        </div>
-        <div class="popup-footer">
-          <button class="popup-button yes-button" @click="popupContents.onYes">
-            Confirm
-          </button>
-          <button class="popup-button secondary" @click="popupContents.onNo">
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
+    <ConfirmationPopup :visible="showPopupWindow" :title="popupContents.popupTitle"
+      :description="popupContents.popupDescription" :list="popupContents.popupList" :height="popupContents.popupHeight"
+      :width="popupContents.popupWidth" @confirm="popupContents.onYes" @cancel="popupContents.onNo" />
 
     <!-- Popup for Export Options -->
-    <div
-      v-if="showExportPopup"
-      class="popup-overlay"
-      @dragover.prevent="handleDragOver"
-      @drop="handleDrop"
-      @dragenter="handleDragEnter"
-      @dragleave="handleDragLeave"
-      :class="{ 'drag-over': isDragOver }"
-    >
-      <div class="drag-drop-indicator">
-        <div
-          style="
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 200px;
-          "
-        >
-          <p>
-            Drop <span style="font-weight: bold">XLSX file</span> here to upload
-            as <span style="font-weight: bold">template</span>
-          </p>
-        </div>
-      </div>
-      <div
-        v-if="!isDragOver"
-        class="popup-container export-popup"
-        :style="{ width: '670px', height: '500px' }"
-      >
-        <div class="popup-header">
-          <span class="popup-title">Export Options</span>
-          <span
-            class="popup-info-button"
-            @mouseover="showExportHelpTooltip = true"
-            @mouseleave="showExportHelpTooltip = false"
-          >
-            ?
-            <div v-if="showExportHelpTooltip" class="tooltip-box">
-              <span style="font-weight: bold">INSTRUCTIONS:</span>
-              <ol>
-                <li>
-                  To create custom templates, export the original sheet named
-                  <span style="font-weight: bold">'Parkour'</span> by selecting
-                  the
-                  <span style="font-weight: bold"
-                    >'Export without any additional sheets'</span
-                  >
-                  option.
-                </li>
-                <li>
-                  Add new custom sheets to this exported file, which will serve
-                  as templates.
-                </li>
-                <li>
-                  Upload the modified file, containing both the original
-                  <span style="font-weight: bold">'Parkour'</span> sheet and
-                  newly added
-                  <span style="font-weight: bold">custom sheets</span>. After
-                  uploading the file will appear in the list.
-                </li>
-                <li>
-                  The template is now ready! When you select this modified file
-                  from the list, the system will replace the
-                  <span style="font-weight: bold">'Parkour'</span> sheet with
-                  updated data while keeping all additional sheets intact.
-                </li>
-              </ol>
-            </div>
-          </span>
-          <button class="popup-close-button" @click="showExportPopup = false">
-            &times;
-          </button>
-        </div>
-        <div class="popup-body">
-          <div class="export-section">
-            <div style="font-weight: bold; margin-bottom: 8px">
-              Export Options:
-            </div>
-            <div class="export-selection-radio-option">
-              <input
-                type="radio"
-                id="export-selected"
-                value="selected"
-                v-model="exportSelection"
-                :disabled="!hasSelectedRows"
-              />
-              <label
-                for="export-selected"
-                :class="{ disabled: !hasSelectedRows }"
-              >
-                Export selected libraries & samples
-              </label>
-            </div>
-            <div class="export-selection-radio-option">
-              <input
-                type="radio"
-                id="export-all"
-                value="all"
-                v-model="exportSelection"
-              />
-              <label for="export-all"> Export all libraries & samples </label>
-            </div>
-          </div>
-          <div class="export-section" style="height: 100%">
-            <div style="font-weight: bold; margin-bottom: 8px">
-              Upload additional excel sheet templates to append:
-            </div>
-            <div class="file-list-section">
-              <div class="file-item">
-                <div class="file-info">
-                  <img
-                    :src="iconExportTemplateFile"
-                    alt="Export without any additional sheets"
-                    width="24"
-                    height="24"
-                    style="display: block"
-                  />
-                  <span>Export without any additional sheets</span>
-                </div>
-                <div class="file-actions">
-                  <div
-                    class="file-actions-radio-button"
-                    style="border: none; margin-right: 5px"
-                  >
-                    <input
-                      type="radio"
-                      title="Select"
-                      id="without-file"
-                      value="without-file"
-                      v-model="selectedFile"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div
-                v-for="(
-                  file, index
-                ) in fetchedIncomingLibrariesAndSamplesTemplates"
-                :key="index"
-                class="file-item"
-              >
-              <div class="file-info">
-                <img
-                  :src="iconExportTemplateFileLines"
-                  :alt="file.name"
-                  width="24"
-                  height="24"
-                  style="display: block"
-                />
-                <span>{{ file.name }}</span>
-              </div>
-                <div class="file-actions">
-                  <button
-                    @click="downloadExportTemplate(file)"
-                    class="download-button"
-                    title="Download Original File"
-                  >
-                    <img
-                      :src="iconExportDownload"
-                      alt="Download"
-                      width="24"
-                      height="24"
-                      style="display: block"
-                    />
-                  </button>
-                  <button
-                    @click="removeExportTemplate(index)"
-                    class="remove-button"
-                    title="Remove File"
-                  >
-                    <img
-                      :src="iconExportRemove"
-                      alt="Remove"
-                      width="24"
-                      height="24"
-                      style="display: block"
-                    />
-                  </button>
-                  <div class="file-actions-radio-button">
-                    <input
-                      type="radio"
-                      title="Select File"
-                      :id="'file-radio-' + index"
-                      :value="file"
-                      v-model="selectedFile"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="popup-footer">
-          <div class="file-upload-section">
-            <label
-              for="file-upload"
-              class="file-upload-label"
-              title="Upload additional sheet to append to the exported sheet."
-            >
-              <img
-                :src="iconExportUpload"
-                alt="Upload"
-                width="24"
-                height="24"
-                style="display: block; margin-right: 4px"
-              />
-              <span>Upload</span>
-            </label>
-            <input
-              id="file-upload"
-              type="file"
-              accept=".xlsx"
-              @change="uploadExportTemplate"
-              style="display: none"
-            />
-          </div>
-          <button class="popup-button yes-button" @click="handleExport">
-            OK
-          </button>
-          <button
-            class="popup-button"
-            @click="
-              showExportPopup = false;
-              selectedFile = 'without-file';
-            "
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
+    <ExportPopup :visible="showExportPopup" :templates="fetchedIncomingLibrariesAndSamplesTemplates"
+      v-model:selectedFile="selectedFile" v-model:exportSelection="exportSelection" :hasSelectedRows="hasSelectedRows"
+      @close="showExportPopup = false" @export="handleExport" @upload-template="handleUploadTemplate"
+      @download-template="handleDownloadTemplate" @remove-template="handleRemoveTemplate" />
   </div>
 </template>
 
 <script lang="jsx">
-import TabulatorTable from "../components/tabulatorTable.vue";
+import TabulatorTable from "../components/TabulatorTable.vue";
+import LoadingOverlay from "../components/common/LoadingOverlay.vue";
+import ConfirmationPopup from "../components/common/ConfirmationPopup.vue";
+import ExportPopup from "../components/common/ExportPopup.vue";
 import { saveAs } from "file-saver";
 import {
-  showNotification,
-  handleError,
-  createAxiosObject,
   urlStringStartsWith,
-  createExcelExportBlob
-} from "../utilities/utilityFunctions";
+  handleError,
+} from "../utilities/domUtils";
+import { showNotification } from "../utilities/notifications";
+import { createExcelExportBlob } from "../utilities/excelUtils";
+import { axiosInstance } from "../utilities/axiosInstance";
+import { incomingLibrariesApi } from "../api/incomingLibrariesApi";
 import {
   incomingLibrariesSamplesGroupHeader,
   incomingLibrariesSamplesColumnDefs,
   incomingLibrariesSamplesExportColumns
 } from "../constants/incomingLibrariesSamplesConsts";
 import iconIncomingHeader from "../assets/icons/header_incoming.svg";
-import iconConfirmationAlert from "../assets/icons/alert_confirmation.svg";
-import iconExportTemplateFile from "../assets/icons/export_template.svg";
-import iconExportTemplateFileLines from "../assets/icons/export_template_lines.svg";
-import iconExportDownload from "../assets/icons/export_download.svg";
-import iconExportRemove from "../assets/icons/export_remove.svg";
-import iconExportUpload from "../assets/icons/export_upload.svg";
-const axiosRef = createAxiosObject();
+
 const urlStringStart = urlStringStartsWith();
 
 export default {
   name: "IncomingLibrariesAndSamples",
   components: {
-    TabulatorTable
+    TabulatorTable,
+    LoadingOverlay,
+    ConfirmationPopup,
+    ExportPopup
   },
   data() {
     return {
       iconIncomingHeader,
-      iconConfirmationAlert,
-      iconExportTemplateFile,
-      iconExportTemplateFileLines,
-      iconExportDownload,
-      iconExportRemove,
-      iconExportUpload,
       tabulatorInstance: null,
       loading: true,
       fakeLoading: false,
-      isDragOver: false,
       librariesSamplesList: [],
       columnsList: [],
       showExportPopup: false,
       showPopupWindow: false,
-      showExportHelpTooltip: false,
       fetchedIncomingLibrariesAndSamplesTemplates: [],
       selectedFile: "without-file",
       exportSelection: "selected",
@@ -736,12 +362,7 @@ export default {
       }
     },
     showPopupWindow(newVal) {
-      if (newVal) {
-        this.$nextTick(() => {
-          const yesButton = document.querySelector(".popup-button.yes-button");
-          yesButton.focus();
-        });
-      } else {
+      if (!newVal) {
         document.getElementsByClassName("tabulator-cell")[1]?.click();
       }
     }
@@ -750,9 +371,7 @@ export default {
     async getLibrariesSamples() {
       this.loading = true;
       try {
-        let response = await axiosRef.get(
-          urlStringStart + "/api/incoming_libraries/"
-        );
+        let response = await incomingLibrariesApi.getIncomingLibraries();
         let fetchedRows = response.data.map((element) => ({
           pk: element.pk || "",
           record_type: element.record_type || "",
@@ -873,12 +492,6 @@ export default {
       const selectColumnsButton = this.$el.querySelector(
         "#toggleSelectColumnsButton"
       );
-      const exportPopup = this.$el.querySelector(".export-popup");
-      const exportButton = this.$el.querySelector("#openExportPopupButton");
-      const confirmationPopup = this.$el.querySelector(".confirmation-popup");
-      const clickOnExportButton =
-        exportButton &&
-        (exportButton === event.target || exportButton.contains(event.target));
 
       if (
         this.showAdvancedFilters &&
@@ -898,23 +511,6 @@ export default {
         !selectColumnsButton.contains(event.target)
       ) {
         this.showSelectColumns = false;
-      }
-
-      if (
-        this.showExportPopup &&
-        exportPopup &&
-        !exportPopup.contains(event.target) &&
-        !clickOnExportButton
-      ) {
-        this.showExportPopup = false;
-      }
-
-      if (
-        this.showPopupWindow &&
-        confirmationPopup &&
-        !confirmationPopup.contains(event.target)
-      ) {
-        this.showPopupWindow = false;
       }
     },
     handleKeyDown(event) {
@@ -1065,13 +661,7 @@ export default {
             : true;
           try {
             this.fakeLoadingStart();
-            const payload = {
-              data: JSON.stringify({
-                result: newSamplesSubmittedState
-              })
-            };
-            const url = `${urlStringStart}/api/requests/${requestId}/samples_submitted/`;
-            axiosRef.post(url, payload);
+            incomingLibrariesApi.setSamplesSubmitted(requestId, newSamplesSubmittedState);
             showNotification(
               "Request successfully marked as 'Samples Submitted'.",
               "success"
@@ -1226,13 +816,7 @@ export default {
       this.pendingEditChanges = {};
       this.isSavingEdits = true;
       try {
-        const payload = {
-          data: JSON.stringify(pending)
-        };
-        await axiosRef.post(
-          `${urlStringStart}/api/incoming_libraries/edit/`,
-          payload
-        );
+        await incomingLibrariesApi.updateIncomingLibraries(pending);
       } catch (error) {
         this.queueBatchChanges(pending);
         handleError(error);
@@ -1245,20 +829,13 @@ export default {
     },
     async qualityCheckChange(groupRows, qualityCheck) {
       this.fakeLoadingStart();
-      const payload = {
-        data: JSON.stringify(
-          groupRows.map((row) => ({
+      const data = groupRows.map((row) => ({
             pk: row.getData().pk,
             record_type: row.getData().record_type,
             quality_check: qualityCheck
-          }))
-        )
-      };
+          }));
       try {
-        await axiosRef.post(
-          `${urlStringStart}/api/incoming_libraries/edit/`,
-          payload
-        );
+        await incomingLibrariesApi.updateIncomingLibraries(data);
         showNotification(
           "Quality check status updated successfully.",
           "success"
@@ -1272,16 +849,13 @@ export default {
     },
     async fetchExportTemplates() {
       try {
-        const response = await axiosRef.get(
-          `${urlStringStart}/api/incoming-libraries-samples-templates/`
-        );
+        const response = await incomingLibrariesApi.getTemplates();
         this.fetchedIncomingLibrariesAndSamplesTemplates = response.data;
       } catch (error) {
         handleError(error);
       }
     },
-    async uploadExportTemplate(event) {
-      const file = event.target.files[0];
+    async handleUploadTemplate(file) {
       if (
         file &&
         file.type ===
@@ -1290,15 +864,7 @@ export default {
         const formData = new FormData();
         formData.append("file", file);
         try {
-          await axiosRef.post(
-            `${urlStringStart}/api/incoming-libraries-samples-templates/upload/`,
-            formData,
-            {
-              headers: {
-                "Content-Type": "multipart/form-data"
-              }
-            }
-          );
+          await incomingLibrariesApi.uploadTemplate(formData);
           showNotification("File uploaded successfully.", "success");
           this.fetchExportTemplates();
         } catch (error) {
@@ -1310,14 +876,9 @@ export default {
         showNotification("Please upload a valid XLSX file.", "error");
       }
     },
-    async downloadExportTemplate(file) {
+    async handleDownloadTemplate(file) {
       try {
-        const response = await axiosRef.get(
-          `${urlStringStart}/api/incoming-libraries-samples-templates/${file.id}/download/`,
-          {
-            responseType: "blob"
-          }
-        );
+        const response = await incomingLibrariesApi.downloadTemplate(file.id);
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement("a");
         link.href = url;
@@ -1333,13 +894,11 @@ export default {
         showNotification("Error downloading file: " + error, "error");
       }
     },
-    async removeExportTemplate(index) {
-      const file = this.fetchedIncomingLibrariesAndSamplesTemplates[index];
+    async handleRemoveTemplate(fileId) {
       try {
-        await axiosRef.delete(
-          `${urlStringStart}/api/incoming-libraries-samples-templates/${file.id}/remove/`
-        );
-        this.fetchedIncomingLibrariesAndSamplesTemplates.splice(index, 1);
+        await incomingLibrariesApi.deleteTemplate(fileId);
+        // this.fetchedIncomingLibrariesAndSamplesTemplates.splice(index, 1); // This logic needs index. simpler to re-fetch or find index
+        this.fetchExportTemplates();
         showNotification("File removed successfully.", "success");
       } catch (error) {
         showNotification("Error removing file: " + error, "error");
@@ -1408,7 +967,7 @@ export default {
         const blob = await createExcelExportBlob({
           rows: sortedExportRows,
           exportColumns,
-          axiosInstance: axiosRef,
+          axiosInstance: axiosInstance,
           templateDownloadUrl
         });
         saveAs(blob, filename);
@@ -1454,12 +1013,7 @@ export default {
         file.type ===
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       ) {
-        const event = {
-          target: {
-            files: [file]
-          }
-        };
-        this.uploadExportTemplate(event);
+         this.handleUploadTemplate(file);
       } else {
         showNotification("Please upload a valid XLSX file.", "error");
       }

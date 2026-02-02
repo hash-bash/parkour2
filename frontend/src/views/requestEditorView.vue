@@ -348,14 +348,10 @@
 </template>
 
 <script>
-import TabulatorTable from "../components/tabulatorTable.vue";
-import {
-  applyValueToAllRows,
-  showNotification,
-  handleError,
-  createAxiosObject,
-  urlStringStartsWith
-} from "../utilities/utilityFunctions";
+import TabulatorTable from "../components/TabulatorTable.vue";
+import { applyValueToAllRows, handleError, urlStringStartsWith } from "../utilities/domUtils";
+import { showNotification } from "../utilities/notifications";
+import { createAxiosObject } from "../utilities/axiosInstance";
 import {
   getRequestEditorLibraryColumns,
   getRequestEditorSampleColumns,

@@ -1,8 +1,8 @@
 import {
   applyContextMenuToColumns,
   cellContextMenu,
-  ellipsisContainer
-} from "../utilities/utilityFunctions";
+} from "../utilities/domUtils";
+import { ellipsisContainer } from "../utilities/formatters";
 import iconSelectAll from "../assets/icons/action_select_all.svg";
 import iconDeselectAll from "../assets/icons/action_deselect_all.svg";
 import iconQualityPassed from "../assets/icons/status_quality_passed.svg";

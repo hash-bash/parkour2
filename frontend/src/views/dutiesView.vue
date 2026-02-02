@@ -189,27 +189,12 @@
 
 <script>
 import { AgGridVue } from "ag-grid-vue3";
-import {
-  showNotification,
-  handleError,
-  getProp,
-  urlStringStartsWith
-} from "../utilities/utilityFunctions";
+import { dutiesApi } from "../api/dutiesApi";
+import { showNotification } from "../utilities/notifications";
+import { handleError, getProp } from "../utilities/domUtils";
 import { toRaw } from "vue";
-import axios from "axios";
 import moment from "moment";
-import Cookies from "js-cookie";
 import iconDutiesHeader from "../assets/icons/header_duties.svg";
-
-const axiosRef = axios.create({
-  withCredentials: true,
-  headers: {
-    "content-type": "application/json",
-    "X-CSRFToken": Cookies.get("csrftoken")
-  }
-});
-
-const urlStringStart = urlStringStartsWith();
 
 export default {
   name: "Duties",
@@ -289,36 +274,29 @@ export default {
           "error"
         );
       } else {
-        await axiosRef
-          .post(urlStringStart + "/api/duties/", newDuty)
-          .then(() => {
-            this.newDuty = {};
-            document.getElementById("facility").value = "";
-            document.getElementById("main_name").value = "";
-            document.getElementById("backup_name").value = "";
-            document.getElementById("start_date").value = "";
-            document.getElementById("end_date").value = "";
-            document.getElementById("platform").value = "";
-            document.getElementById("comment").value = "";
+        try {
+          await dutiesApi.createDuty(newDuty);
+          this.newDuty = {};
+          document.getElementById("facility").value = "";
+          document.getElementById("main_name").value = "";
+          document.getElementById("backup_name").value = "";
+          document.getElementById("start_date").value = "";
+          document.getElementById("end_date").value = "";
+          document.getElementById("platform").value = "";
+          document.getElementById("comment").value = "";
 
-            if (this.selectedFilter == "all")
-              this.getFilteredDuties(true, "all");
-            else this.selectedFilter = "all";
-            showNotification("Duty added successfully.", "success");
-          })
-          .catch((error) => {
-            this.getFilteredDuties(true, this.selectedFilter);
-            handleError(error);
-          });
+          if (this.selectedFilter == "all") this.getFilteredDuties(true, "all");
+          else this.selectedFilter = "all";
+          showNotification("Duty added successfully.", "success");
+        } catch (error) {
+          this.getFilteredDuties(true, this.selectedFilter);
+          handleError(error);
+        }
       }
     },
     async getDuties(refresh = false, additionalUrl = "") {
       try {
-        const response = await axiosRef.get(
-          urlStringStart +
-            "/api/duties/" +
-            (additionalUrl !== "" ? "?" + additionalUrl : "")
-        );
+        const response = await dutiesApi.getDuties(additionalUrl);
         let fetchedRows = [];
         let userList = this.userList;
         getProp(response, "data", []).forEach((element) => {
@@ -457,18 +435,16 @@ export default {
             newValue = newValue.trim();
             break;
         }
-        await axiosRef
-          .patch(urlStringStart + "/api/duties/" + String(dutyId) + "/", {
+        try {
+          await dutiesApi.updateDuty(dutyId, {
             [columnName]: newValue
-          })
-          .then(() => {
-            this.getFilteredDuties(false, this.selectedFilter);
-            showNotification("Duty edited successfully.", "success");
-          })
-          .catch((error) => {
-            this.getFilteredDuties(true, this.selectedFilter);
-            handleError(error);
           });
+          this.getFilteredDuties(false, this.selectedFilter);
+          showNotification("Duty edited successfully.", "success");
+        } catch (error) {
+          this.getFilteredDuties(true, this.selectedFilter);
+          handleError(error);
+        }
         this.updateGridDataObject();
       }
     },
@@ -515,15 +491,15 @@ export default {
       }
     },
     async getUsers() {
-      await axiosRef
-        .get(urlStringStart + "/api/duties/responsibles/")
-        .then((response) => {
-          let userList = getProp(response, "data", []);
-          this.userList = userList;
-          this.getFilteredDuties(true, this.selectedFilter);
-          this.setColumns(userList);
-        })
-        .catch((error) => handleError(error));
+      try {
+        const response = await dutiesApi.getResponsibles();
+        let userList = getProp(response, "data", []);
+        this.userList = userList;
+        this.getFilteredDuties(true, this.selectedFilter);
+        this.setColumns(userList);
+      } catch (error) {
+        handleError(error);
+      }
     },
     setColumns(userList) {
       this.columnsList = [

@@ -1,8 +1,6 @@
-import {
-  cellContextMenu,
-  ellipsisContainer,
-  showNotification,
-} from "../utilities/utilityFunctions";
+import { cellContextMenu } from "../utilities/domUtils";
+import { ellipsisContainer } from "../utilities/formatters";
+import { showNotification } from "../utilities/notifications";
 
 export const LIBRARY_REQUIRED_FIELDS = new Set([
   "name",

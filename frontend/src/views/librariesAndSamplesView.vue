@@ -403,18 +403,13 @@
 </template>
 
 <script lang="jsx">
-import LiteTabulatorTable from "../components/liteTabulatorTable.vue";
+import LiteTabulatorTable from "../components/LiteTabulatorTable.vue";
 import { saveAs } from "file-saver";
-import {
-  showNotification,
-  handleError,
-  createAxiosObject,
-  urlStringStartsWith,
-  isValidDate,
-  formatDateForInput,
-  formatDisplayDate,
-  createExcelExportBlob
-} from "../utilities/utilityFunctions";
+import { showNotification } from "../utilities/notifications";
+import { handleError, urlStringStartsWith } from "../utilities/domUtils";
+import { createAxiosObject } from "../utilities/axiosInstance";
+import { isValidDate, formatDateForInput, formatDisplayDate } from "../utilities/dateUtils";
+import { createExcelExportBlob } from "../utilities/excelUtils";
 import {
   librariesAndSamplesGroupHeader,
   librariesAndSamplesColumnDefs,
@@ -422,7 +417,7 @@ import {
 } from "../constants/librariesAndSamplesConsts";
 import { statusMap } from "../constants/statusConsts";
 import RequestEditorView from "./requestEditorView.vue";
-import RequestActionsPopups from "../components/requestActionsPopups.vue";
+import RequestActionsPopups from "../components/RequestActionsPopups.vue";
 import iconLibrariesHeader from "../assets/icons/header_libraries_samples.svg";
 import iconExportTemplateFile from "../assets/icons/export_template.svg";
 import iconExportTemplateFileLines from "../assets/icons/export_template_lines.svg";

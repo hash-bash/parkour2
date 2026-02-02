@@ -213,12 +213,9 @@
 </template>
 
 <script>
-import {
-  showNotification,
-  handleError,
-  createAxiosObject,
-  urlStringStartsWith
-} from "../utilities/utilityFunctions";
+import { showNotification } from "../utilities/notifications";
+import { handleError, urlStringStartsWith } from "../utilities/domUtils";
+import { createAxiosObject } from "../utilities/axiosInstance";
 
 const axiosRef = createAxiosObject();
 const urlStringStart = urlStringStartsWith();

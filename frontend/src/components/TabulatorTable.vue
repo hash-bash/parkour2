@@ -57,7 +57,7 @@
 import { TabulatorFull as Tabulator } from "tabulator-tables";
 import * as XLSX from "xlsx";
 import "tabulator-tables/dist/css/tabulator_bootstrap5.min.css";
-import { showNotification } from "../utilities/utilityFunctions";
+import { showNotification } from "../utilities/notifications";
 import { markRaw } from "vue";
 import iconPasteError from "../assets/icons/alert_confirmation.svg";
 

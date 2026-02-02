@@ -431,15 +431,12 @@
 </template>
 
 <script lang="jsx">
-import TabulatorTable from "../components/tabulatorTable.vue";
+import TabulatorTable from "../components/TabulatorTable.vue";
 import { saveAs } from "file-saver";
-import {
-  showNotification,
-  handleError,
-  createAxiosObject,
-  urlStringStartsWith,
-  createExcelExportBlob
-} from "../utilities/utilityFunctions";
+import { showNotification } from "../utilities/notifications";
+import { handleError, urlStringStartsWith } from "../utilities/domUtils";
+import { createAxiosObject } from "../utilities/axiosInstance";
+import { createExcelExportBlob } from "../utilities/excelUtils";
 import {
   libraryPreparationColumnDefs,
   libraryPreparationExportColumns,

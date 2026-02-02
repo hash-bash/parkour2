@@ -1,9 +1,9 @@
 import {
   applyContextMenuToColumns,
   cellContextMenu,
-  ellipsisContainer,
-  showNotification,
-} from "../utilities/utilityFunctions";
+} from "../utilities/domUtils";
+import { ellipsisContainer } from "../utilities/formatters";
+import { showNotification } from "../utilities/notifications";
 import iconSamplesSubmitted from "../assets/icons/status_samples_submitted.svg";
 import iconSamplesNotSubmitted from "../assets/icons/status_samples_not_submitted.svg";
 import iconGmoYes from "../assets/icons/status_gmo_yes.svg";
