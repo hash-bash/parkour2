@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -19,9 +19,7 @@ class Command(BaseCommand):
 
     def list_template_files(self, template_dir):
         template_files = []
-        # TODO: Look into using pathlib.Path.rglob() instead. 🤔
-        for dirpath, _, filenames in os.walk(str(template_dir)):
-            for filename in filenames:
-                if filename.endswith(".html") or filename.endswith(".txt"):
-                    template_files.append(os.path.join(dirpath, filename))
+        for file_path in Path(template_dir).rglob("*"):
+            if file_path.is_file() and file_path.suffix in [".html", ".txt"]:
+                template_files.append(str(file_path))
         return template_files
