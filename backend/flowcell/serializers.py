@@ -318,13 +318,13 @@ class PoolListSerializer(ModelSerializer):
 
     def get_read_length(self, obj):
         records = obj.libraries.all() or obj.samples.all()
-        if records.count() > 0:
+        if len(records) > 0:
             return records[0].read_length.pk
         return None
 
     def get_read_length_name(self, obj):
         records = obj.libraries.all() or obj.samples.all()
-        if records.count() > 0:
+        if len(records) > 0:
             return records[0].read_length.name
         return None
 
@@ -344,7 +344,7 @@ class PoolListSerializer(ModelSerializer):
         data = super().to_representation(instance)
         # Ignore pools if all of its libraries/samples are
         # not ready yet or failed
-        if instance.libraries.count() + instance.samples.count() == 0:
+        if len(instance.libraries.all()) + len(instance.samples.all()) == 0:
             return {}
         return data
 
