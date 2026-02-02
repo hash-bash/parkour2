@@ -104,7 +104,10 @@ import {
   handleError,
   createAxiosObject,
   urlStringStartsWith,
-  createExcelExportBlob
+  createExcelExportBlob,
+  loadColumnSettings,
+  saveColumnSettings,
+  resetColumnSettings
 } from "../utilities/utilityFunctions";
 import {
   poolingColumnDefs,
@@ -299,35 +302,11 @@ export default {
       }
     },
     setColumns() {
-      const storedVisibility = JSON.parse(
-        localStorage.getItem("poolingColumnVisibility") || "{}"
+      const columnDefs = poolingColumnDefs(() => this.tabulatorInstance);
+      this.columnsList = loadColumnSettings(
+        "pooling",
+        columnDefs
       );
-      const storedWidths = JSON.parse(
-        localStorage.getItem("poolingColumnWidths") || "{}"
-      );
-
-      const applySettings = (columns) => {
-        return columns.map((column) => {
-          if (column.field) {
-            if (storedWidths[column.field]) {
-              column.width = storedWidths[column.field];
-              if (column.minWidth && column.width < column.minWidth) {
-                column.width = column.minWidth;
-              }
-            }
-            column.visible =
-              storedVisibility[column.field] ?? column.visible ?? true;
-          }
-          if (column.columns) {
-            column.columns = applySettings(column.columns);
-          }
-          return column;
-        });
-      };
-
-      let columnDefs = poolingColumnDefs(() => this.tabulatorInstance);
-
-      this.columnsList = applySettings(columnDefs);
     },
     handleOutsideClick(event) {
       const selectColumnsPopup = this.$el.querySelector(".button-popup-container");
@@ -399,48 +378,34 @@ export default {
     handleColumnResized(column) {
       const field = column.getField();
       const width = column.getWidth();
-      const storedWidths = JSON.parse(
-        localStorage.getItem("poolingColumnWidths") || "{}"
-      );
-      const newWidths = {
-        ...storedWidths,
-        [field]: width
-      };
-      localStorage.setItem("poolingColumnWidths", JSON.stringify(newWidths));
+      saveColumnSettings("pooling", field, width, "width");
       this.fakeLoadingStart();
       setTimeout(() => this.fakeLoadingStop(), 50);
     },
     handleColumnVisibilityChanged(field, visible) {
-      const storedVisibility = JSON.parse(
-        localStorage.getItem("poolingColumnVisibility") || "{}"
+      saveColumnSettings(
+        "pooling",
+        field,
+        visible,
+        "visibility"
       );
-
-      const newVisibility = {
-        ...storedVisibility,
-        [field]: visible
-      };
-
-      localStorage.setItem(
-        "poolingColumnVisibility",
-        JSON.stringify(newVisibility)
-      );
-
       this.fakeLoadingStart();
       setTimeout(() => this.fakeLoadingStop(), 50);
     },
     toggleColumnVisibility(column) {
       if (this.tabulatorInstance) {
         this.tabulatorInstance.getTable().toggleColumn(column.field);
+        this.handleColumnVisibilityChanged(column.field, column.visible);
       }
     },
     resetColumnWidths() {
-      localStorage.removeItem("poolingColumnWidths");
+      resetColumnSettings("pooling", "width");
       this.setColumns();
       this.fakeLoadingStart();
       setTimeout(() => this.fakeLoadingStop(), 300);
     },
     resetColumnVisibility() {
-      localStorage.removeItem("poolingColumnVisibility");
+      resetColumnSettings("pooling", "visibility");
       this.setColumns();
       this.fakeLoadingStart();
       setTimeout(() => this.fakeLoadingStop(), 300);
@@ -906,28 +871,6 @@ export default {
 </script>
 
 <style>
-html,
-body,
-#app {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-.parent-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-}
-
-.table-container {
-  flex: 1;
-  overflow: auto;
-  position: relative;
-}
-
 .pool-header-green {
   color: #e8f5e9 !important;
   border-left: 16px solid #4caf50;
@@ -936,65 +879,5 @@ body,
 .pool-header-red {
   color: #ffebee !important;
   border-left: 16px solid #f44336;
-}
-
-@media (max-width: 1400px) {
-  .header-title {
-    min-width: 80px;
-  }
-
-  .search-bar {
-    width: 280px;
-  }
-
-  .search-bar input {
-    padding: 8px;
-  }
-
-  .header-button {
-    padding: 8px 12px;
-  }
-}
-
-@media (max-width: 1100px) {
-  .search-bar {
-    width: 250px;
-  }
-
-  .search-bar input {
-    padding: 6px;
-  }
-
-  .header-button span {
-    display: none;
-  }
-}
-
-@media (max-width: 700px) {
-  .header-title {
-    font-size: 16px;
-  }
-
-  .search-bar {
-    width: 130px;
-  }
-
-  .search-bar input {
-    width: 85px;
-  }
-}
-
-@media (max-width: 550px) {
-  .header-logo {
-    display: none !important;
-  }
-
-  .search-bar {
-    display: none;
-  }
-
-  .header-button {
-    display: none;
-  }
 }
 </style>

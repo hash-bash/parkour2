@@ -662,14 +662,6 @@ export default {
 </script>
 
 <style>
-.parent-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-}
-
 .duties-body {
   display: flex;
   gap: 12px;

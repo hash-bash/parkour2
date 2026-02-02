@@ -105,7 +105,10 @@ import {
   handleError,
   createAxiosObject,
   urlStringStartsWith,
-  createExcelExportBlob
+  createExcelExportBlob,
+  loadColumnSettings,
+  saveColumnSettings,
+  resetColumnSettings
 } from "../utilities/utilityFunctions";
 import {
   libraryPreparationColumnDefs,
@@ -290,37 +293,13 @@ export default {
       }
     },
     setColumns() {
-      const storedVisibility = JSON.parse(
-        localStorage.getItem("libraryPreparationColumnVisibility") || "{}"
-      );
-      const storedWidths = JSON.parse(
-        localStorage.getItem("libraryPreparationColumnWidths") || "{}"
-      );
-
-      const applySettings = (columns) => {
-        return columns.map((column) => {
-          if (column.field) {
-            if (storedWidths[column.field]) {
-              column.width = storedWidths[column.field];
-              if (column.minWidth && column.width < column.minWidth) {
-                column.width = column.minWidth;
-              }
-            }
-            column.visible =
-              storedVisibility[column.field] ?? column.visible ?? true;
-          }
-          if (column.columns) {
-            column.columns = applySettings(column.columns);
-          }
-          return column;
-        });
-      };
-
-      let columnDefs = libraryPreparationColumnDefs(
+      const columnDefs = libraryPreparationColumnDefs(
         () => this.tabulatorInstance
       );
-
-      this.columnsList = applySettings(columnDefs);
+      this.columnsList = loadColumnSettings(
+        "libraryPreparation",
+        columnDefs
+      );
     },
     handleOutsideClick(event) {
       const selectColumnsPopup = this.$el.querySelector(".button-popup-container");
@@ -392,35 +371,17 @@ export default {
     handleColumnResized(column) {
       const field = column.getField();
       const width = column.getWidth();
-      const storedWidths = JSON.parse(
-        localStorage.getItem("libraryPreparationColumnWidths") || "{}"
-      );
-      const newWidths = {
-        ...storedWidths,
-        [field]: width
-      };
-      localStorage.setItem(
-        "libraryPreparationColumnWidths",
-        JSON.stringify(newWidths)
-      );
+      saveColumnSettings("libraryPreparation", field, width, "width");
       this.fakeLoadingStart();
       setTimeout(() => this.fakeLoadingStop(), 50);
     },
     handleColumnVisibilityChanged(field, visible) {
-      const storedVisibility = JSON.parse(
-        localStorage.getItem("libraryPreparationColumnVisibility") || "{}"
+      saveColumnSettings(
+        "libraryPreparation",
+        field,
+        visible,
+        "visibility"
       );
-
-      const newVisibility = {
-        ...storedVisibility,
-        [field]: visible
-      };
-
-      localStorage.setItem(
-        "libraryPreparationColumnVisibility",
-        JSON.stringify(newVisibility)
-      );
-
       this.fakeLoadingStart();
       setTimeout(() => this.fakeLoadingStop(), 50);
     },
@@ -431,13 +392,13 @@ export default {
       }
     },
     resetColumnWidths() {
-      localStorage.removeItem("libraryPreparationColumnWidths");
+      resetColumnSettings("libraryPreparation", "width");
       this.setColumns();
       this.fakeLoadingStart();
       setTimeout(() => this.fakeLoadingStop(), 300);
     },
     resetColumnVisibility() {
-      localStorage.removeItem("libraryPreparationColumnVisibility");
+      resetColumnSettings("libraryPreparation", "visibility");
       this.setColumns();
       this.fakeLoadingStart();
       setTimeout(() => this.fakeLoadingStop(), 300);
@@ -641,7 +602,8 @@ export default {
         handleError(error);
       }
     },
-    handleFileUpload(file) {
+    async uploadExportTemplate(event) {
+      const file = event.target.files[0];
       if (
         file &&
         file.type ===
@@ -649,28 +611,25 @@ export default {
       ) {
         const formData = new FormData();
         formData.append("file", file);
-        this.uploadExportTemplate(formData);
+        try {
+          await axiosRef.post(
+            `${urlStringStart}/api/library-preparation-templates/upload/`,
+            formData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data"
+              }
+            }
+          );
+          showNotification("File uploaded successfully.", "success");
+          this.fetchExportTemplates();
+        } catch (error) {
+          showNotification("Error uploading file: " + error, "error");
+        } finally {
+          this.selectedFile = "without-file";
+        }
       } else {
         showNotification("Please upload a valid XLSX file.", "error");
-      }
-    },
-    async uploadExportTemplate(formData) {
-      try {
-        await axiosRef.post(
-          `${urlStringStart}/api/library-preparation-templates/upload/`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data"
-            }
-          }
-        );
-        showNotification("File uploaded successfully.", "success");
-        this.fetchExportTemplates();
-      } catch (error) {
-        showNotification("Error uploading file: " + error, "error");
-      } finally {
-        this.selectedFile = "without-file";
       }
     },
     async downloadExportTemplate(file) {
@@ -819,87 +778,3 @@ export default {
   }
 };
 </script>
-
-<style>
-html,
-body,
-#app {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-.parent-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-}
-
-.table-container {
-  flex: 1;
-  overflow: auto;
-  position: relative;
-}
-
-@media (max-width: 1400px) {
-  .header-title {
-    min-width: 80px;
-  }
-
-  .search-bar {
-    width: 280px;
-  }
-
-  .search-bar input {
-    padding: 8px;
-  }
-
-  .header-button {
-    padding: 8px 12px;
-  }
-}
-
-@media (max-width: 1100px) {
-  .search-bar {
-    width: 250px;
-  }
-
-  .search-bar input {
-    padding: 6px;
-  }
-
-  .header-button span {
-    display: none;
-  }
-}
-
-@media (max-width: 700px) {
-  .header-title {
-    font-size: 16px;
-  }
-
-  .search-bar {
-    width: 130px;
-  }
-
-  .search-bar input {
-    width: 85px;
-  }
-}
-
-@media (max-width: 550px) {
-  .header-logo {
-    display: none !important;
-  }
-
-  .search-bar {
-    display: none;
-  }
-
-  .header-button {
-    display: none;
-  }
-}
-</style>

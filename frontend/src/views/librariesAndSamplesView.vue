@@ -10,7 +10,6 @@
         Loading <span style="font-weight: bold">Libraries & Samples</span>...
       </p>
     </LoadingOverlay>
-
     <LoadingOverlay :visible="exportLoading">
       <div class="export-long-loading">
         <span> <strong>Please wait</strong>, this might take a while... </span>
@@ -312,7 +311,10 @@ import {
   isValidDate,
   formatDateForInput,
   formatDisplayDate,
-  createExcelExportBlob
+  createExcelExportBlob,
+  loadColumnSettings,
+  saveColumnSettings,
+  resetColumnSettings
 } from "../utilities/utilityFunctions";
 import {
   librariesAndSamplesGroupHeader,
@@ -803,61 +805,17 @@ export default {
       };
     },
     setColumns() {
-      const storedVisibility = JSON.parse(
-        localStorage.getItem("librariesAndSamplesColumnVisibility") || "{}"
-      );
-      const storedWidths = JSON.parse(
-        localStorage.getItem("librariesAndSamplesColumnWidths") || "{}"
-      );
-
-      const storedInputColumnMode = localStorage.getItem(
-        "librariesAndSamplesInputColumnMode"
-      );
-      if (
-        storedInputColumnMode === "mode_facility" ||
-        storedInputColumnMode === "mode_user"
-      ) {
-        this.inputColumnMode = storedInputColumnMode;
-      }
-
-      const applySettings = (columns) => {
-        return columns.map((column) => {
-          if (column.field) {
-            if (
-              Object.prototype.hasOwnProperty.call(storedWidths, column.field)
-            ) {
-              column.width = storedWidths[column.field];
-              if (column.minWidth && column.width < column.minWidth) {
-                column.width = column.minWidth;
-              }
-            }
-            if (
-              Object.prototype.hasOwnProperty.call(
-                storedVisibility,
-                column.field
-              )
-            ) {
-              column.visible = storedVisibility[column.field];
-            } else {
-              column.visible = column.visible ?? true;
-            }
-          }
-          if (column.columns) {
-            column.columns = applySettings(column.columns);
-          }
-          return column;
-        });
-      };
-
-      let columnDefs = librariesAndSamplesColumnDefs(
+      const columnDefs = librariesAndSamplesColumnDefs(
         () => this.tabulatorInstance,
         {
           inputColumnMode: this.inputColumnMode,
           onInputColumnModeChange: this.handleInputColumnModeChange.bind(this)
         }
       );
-
-      this.columnsList = applySettings(columnDefs);
+      this.columnsList = loadColumnSettings(
+        "librariesAndSamples",
+        columnDefs
+      );
       this.syncInputHeaderMode();
     },
     handleOutsideClick(event) {
@@ -975,35 +933,17 @@ export default {
     handleColumnResized(column) {
       const field = column.getField();
       const width = column.getWidth();
-      const storedWidths = JSON.parse(
-        localStorage.getItem("librariesAndSamplesColumnWidths") || "{}"
-      );
-      const newWidths = {
-        ...storedWidths,
-        [field]: width
-      };
-      localStorage.setItem(
-        "librariesAndSamplesColumnWidths",
-        JSON.stringify(newWidths)
-      );
+      saveColumnSettings("librariesAndSamples", field, width, "width");
       this.fakeLoadingStart();
       setTimeout(() => this.fakeLoadingStop(), 50);
     },
     handleColumnVisibilityChanged(field, visible) {
-      const storedVisibility = JSON.parse(
-        localStorage.getItem("librariesAndSamplesColumnVisibility") || "{}"
+      saveColumnSettings(
+        "librariesAndSamples",
+        field,
+        visible,
+        "visibility"
       );
-
-      const newVisibility = {
-        ...storedVisibility,
-        [field]: visible
-      };
-
-      localStorage.setItem(
-        "librariesAndSamplesColumnVisibility",
-        JSON.stringify(newVisibility)
-      );
-
       this.fakeLoadingStart();
       setTimeout(() => this.fakeLoadingStop(), 50);
     },
@@ -1014,13 +954,13 @@ export default {
       }
     },
     resetColumnWidths() {
-      localStorage.removeItem("librariesAndSamplesColumnWidths");
+      resetColumnSettings("librariesAndSamples", "width");
       this.setColumns();
       this.fakeLoadingStart();
       setTimeout(() => this.fakeLoadingStop(), 300);
     },
     resetColumnVisibility() {
-      localStorage.removeItem("librariesAndSamplesColumnVisibility");
+      resetColumnSettings("librariesAndSamples", "visibility");
       this.setColumns();
       this.fakeLoadingStart();
       setTimeout(() => this.fakeLoadingStop(), 300);
@@ -1703,36 +1643,6 @@ export default {
 </script>
 
 <style>
-html,
-body,
-#app {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-.parent-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-}
-
-.table-container {
-  flex: 1;
-  overflow: auto;
-  position: relative;
-}
-
-.search-bar {
-  width: 330px;
-}
-
-body.input-dropdown-open .tabulator-tooltip {
-  display: none !important;
-}
-
 .export-long-loading {
   margin-top: 16px;
   display: flex;
@@ -1745,75 +1655,5 @@ body.input-dropdown-open .tabulator-tooltip {
   padding: 20px;
   border: 1px solid #333;
   border-radius: 8px;
-}
-
-
-@media (max-width: 1550px) {
-  .header-title {
-    min-width: 80px;
-  }
-
-  .search-bar {
-    width: 250px;
-  }
-
-  .search-bar input {
-    padding: 8px;
-  }
-
-  .header-button {
-    padding: 8px 12px;
-  }
-}
-
-@media (max-width: 1470px) {
-  .date-filter {
-    padding: 2px;
-  }
-
-  .date-filters label {
-    display: none;
-  }
-
-  .header-button span {
-    display: none;
-  }
-}
-
-@media (max-width: 950px) {
-  .header-title {
-    font-size: 16px;
-  }
-
-  .search-bar {
-    width: 100px;
-  }
-
-  .search-bar input {
-    width: 10px;
-    padding-right: 25px;
-  }
-
-  .date-filters {
-    display: none;
-  }
-}
-
-@media (max-width: 600px) {
-  .header-logo {
-    display: none !important;
-  }
-
-  .search-bar {
-    display: none;
-  }
-
-  .date-filters {
-    display: none;
-  }
-
-  .header-button {
-    display: none;
-  }
 }
 </style>

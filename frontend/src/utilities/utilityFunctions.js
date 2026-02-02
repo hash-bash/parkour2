@@ -871,3 +871,55 @@ export async function createExcelExportBlob({
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
 }
+
+export function loadColumnSettings(prefix, defaultColumns = []) {
+  const storedVisibility = JSON.parse(
+    localStorage.getItem(`${prefix}ColumnVisibility`) || "{}"
+  );
+  const storedWidths = JSON.parse(
+    localStorage.getItem(`${prefix}ColumnWidths`) || "{}"
+  );
+
+  const applySettings = (columns) => {
+    return columns.map((column) => {
+      const newCol = { ...column };
+      if (newCol.field) {
+        if (Object.prototype.hasOwnProperty.call(storedWidths, newCol.field)) {
+          newCol.width = storedWidths[newCol.field];
+          if (newCol.minWidth && newCol.width < newCol.minWidth) {
+            newCol.width = newCol.minWidth;
+          }
+        }
+        if (
+          Object.prototype.hasOwnProperty.call(storedVisibility, newCol.field)
+        ) {
+          newCol.visible = storedVisibility[newCol.field];
+        } else {
+          newCol.visible = newCol.visible ?? true;
+        }
+      }
+      if (newCol.columns) {
+        newCol.columns = applySettings(newCol.columns);
+      }
+      return newCol;
+    });
+  };
+
+  return applySettings(defaultColumns);
+}
+
+export function saveColumnSettings(prefix, field, value, type = 'visibility') {
+  const key = `${prefix}Column${type === 'width' ? 'Widths' : 'Visibility'}`;
+  const stored = JSON.parse(localStorage.getItem(key) || "{}");
+  stored[field] = value;
+  localStorage.setItem(key, JSON.stringify(stored));
+}
+
+export function resetColumnSettings(prefix, type = 'all') {
+  if (type === 'all' || type === 'width') {
+    localStorage.removeItem(`${prefix}ColumnWidths`);
+  }
+  if (type === 'all' || type === 'visibility') {
+    localStorage.removeItem(`${prefix}ColumnVisibility`);
+  }
+}

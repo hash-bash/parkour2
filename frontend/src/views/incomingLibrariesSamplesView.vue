@@ -175,7 +175,10 @@ import {
   handleError,
   createAxiosObject,
   urlStringStartsWith,
-  createExcelExportBlob
+  createExcelExportBlob,
+  loadColumnSettings,
+  saveColumnSettings,
+  resetColumnSettings
 } from "../utilities/utilityFunctions";
 import {
   incomingLibrariesSamplesGroupHeader,
@@ -435,38 +438,13 @@ export default {
       }
     },
     setColumns() {
-      const storedVisibility = JSON.parse(
-        localStorage.getItem("incomingLibrariesAndSamplesColumnVisibility") ||
-          "{}"
-      );
-      const storedWidths = JSON.parse(
-        localStorage.getItem("incomingLibrariesAndSamplesColumnWidths") || "{}"
-      );
-
-      const applySettings = (columns) => {
-        return columns.map((column) => {
-          if (column.field) {
-            if (storedWidths[column.field]) {
-              column.width = storedWidths[column.field];
-              if (column.minWidth && column.width < column.minWidth) {
-                column.width = column.minWidth;
-              }
-            }
-            column.visible =
-              storedVisibility[column.field] ?? column.visible ?? true;
-          }
-          if (column.columns) {
-            column.columns = applySettings(column.columns);
-          }
-          return column;
-        });
-      };
-
-      let columnDefs = incomingLibrariesSamplesColumnDefs(
+      const columnDefs = incomingLibrariesSamplesColumnDefs(
         () => this.tabulatorInstance
       );
-
-      this.columnsList = applySettings(columnDefs);
+      this.columnsList = loadColumnSettings(
+        "incomingLibrariesAndSamples",
+        columnDefs
+      );
     },
     handleOutsideClick(event) {
       const advancedFiltersPopup = this.$el.querySelector(
@@ -475,7 +453,9 @@ export default {
       const advancedFiltersButton = this.$el.querySelector(
         "#toggleAdvancedFiltersButton"
       );
-      const selectColumnsPopup = this.$el.querySelector(".button-popup-container");
+      const selectColumnsPopup = this.$el.querySelector(
+        ".button-popup-container"
+      );
       const selectColumnsButton = this.$el.querySelector(
         "#toggleSelectColumnsButton"
       );
@@ -495,8 +475,6 @@ export default {
       ) {
         this.showAdvancedFilters = false;
       }
-
-      // Column Selector handles its own outside click, but we keep this for consistency if needed
     },
     handleKeyDown(event) {
       const isEscape = event.key === "Escape";
@@ -536,37 +514,18 @@ export default {
     handleColumnResized(column) {
       const field = column.getField();
       const width = column.getWidth();
-      const storedWidths = JSON.parse(
-        localStorage.getItem("incomingLibrariesAndSamplesColumnWidths") || "{}"
-      );
-      const newWidths = {
-        ...storedWidths,
-        [field]: width
-      };
-      localStorage.setItem(
-        "incomingLibrariesAndSamplesColumnWidths",
-        JSON.stringify(newWidths)
-      );
+      saveColumnSettings("incomingLibrariesAndSamples", field, width, "width");
       this.fakeLoadingStart();
       setTimeout(() => this.fakeLoadingStop(), 50);
     },
     handleColumnVisibilityChanged(field, visible) {
       if (field !== "from_user" && field !== "from_facility") {
-        const storedVisibility = JSON.parse(
-          localStorage.getItem("incomingLibrariesAndSamplesColumnVisibility") ||
-            "{}"
+        saveColumnSettings(
+          "incomingLibrariesAndSamples",
+          field,
+          visible,
+          "visibility"
         );
-
-        const newVisibility = {
-          ...storedVisibility,
-          [field]: visible
-        };
-
-        localStorage.setItem(
-          "incomingLibrariesAndSamplesColumnVisibility",
-          JSON.stringify(newVisibility)
-        );
-
         this.fakeLoadingStart();
         setTimeout(() => this.fakeLoadingStop(), 50);
       }
@@ -578,13 +537,13 @@ export default {
       }
     },
     resetColumnWidths() {
-      localStorage.removeItem("incomingLibrariesAndSamplesColumnWidths");
+      resetColumnSettings("incomingLibrariesAndSamples", "width");
       this.setColumns();
       this.fakeLoadingStart();
       setTimeout(() => this.fakeLoadingStop(), 300);
     },
     resetColumnVisibility() {
-      localStorage.removeItem("incomingLibrariesAndSamplesColumnVisibility");
+      resetColumnSettings("incomingLibrariesAndSamples", "visibility");
       this.setColumns();
       this.fakeLoadingStart();
       setTimeout(() => this.fakeLoadingStop(), 300);
@@ -1029,87 +988,3 @@ export default {
   }
 };
 </script>
-
-<style>
-html,
-body,
-#app {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-.parent-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-}
-
-.table-container {
-  flex: 1;
-  overflow: auto;
-  position: relative;
-}
-
-@media (max-width: 1400px) {
-  .header-title {
-    min-width: 80px;
-  }
-
-  .search-bar {
-    width: 280px;
-  }
-
-  .search-bar input {
-    padding: 8px;
-  }
-
-  .header-button {
-    padding: 8px 12px;
-  }
-}
-
-@media (max-width: 1100px) {
-  .search-bar {
-    width: 250px;
-  }
-
-  .search-bar input {
-    padding: 6px;
-  }
-
-  .header-button span {
-    display: none;
-  }
-}
-
-@media (max-width: 700px) {
-  .header-title {
-    font-size: 16px;
-  }
-
-  .search-bar {
-    width: 130px;
-  }
-
-  .search-bar input {
-    width: 85px;
-  }
-}
-
-@media (max-width: 550px) {
-  .header-logo {
-    display: none !important;
-  }
-
-  .search-bar {
-    display: none;
-  }
-
-  .header-button {
-    display: none;
-  }
-}
-</style>
