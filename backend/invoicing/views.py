@@ -6,7 +6,7 @@ from dateutil.relativedelta import relativedelta
 from django.apps import apps
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Min, Prefetch, Q
+from django.db.models import Count, Min, Prefetch, Q
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from month import Month
@@ -115,7 +115,11 @@ class InvoicingViewSet(viewsets.ReadOnlyModelViewSet):
                 Prefetch("samples", queryset=samples_qs),
             )
             .distinct()
-            .annotate(sequencing_date=Min("flowcell__create_time"))
+            .annotate(
+                sequencing_date=Min("flowcell__create_time"),
+                num_libraries_count=Count("libraries", distinct=True),
+                num_samples_count=Count("samples", distinct=True),
+            )
             .only(
                 "name",
                 "cost_unit__name",

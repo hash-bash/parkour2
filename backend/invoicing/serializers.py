@@ -223,8 +223,13 @@ class InvoicingSerializer(ModelSerializer):
         return {x.read_length.pk for x in obj.records}
 
     def get_num_libraries_samples_show(self, obj):
-        num_libraries = obj.libraries.count()
-        num_samples = obj.samples.count()
+        num_libraries = getattr(obj, "num_libraries_count", None)
+        if num_libraries is None:
+            num_libraries = obj.libraries.count()
+
+        num_samples = getattr(obj, "num_samples_count", None)
+        if num_samples is None:
+            num_samples = obj.samples.count()
 
         if num_libraries > 0:
             return f"{num_libraries} libraries"
@@ -241,8 +246,13 @@ class InvoicingSerializer(ModelSerializer):
 
         curr_date = self.context["end_date"]
 
-        num_libraries = obj.libraries.count()
-        num_samples = obj.samples.count()
+        num_libraries = getattr(obj, "num_libraries_count", None)
+        if num_libraries is None:
+            num_libraries = obj.libraries.count()
+
+        num_samples = getattr(obj, "num_samples_count", None)
+        if num_samples is None:
+            num_samples = obj.samples.count()
 
         if num_libraries > 0:
             libcount = 0
