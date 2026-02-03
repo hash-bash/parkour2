@@ -117,6 +117,17 @@ class InvoicingSerializer(ModelSerializer):
             x["library_protocol"]: x["price"] for x in preparation_costs
         }
 
+        # Fetch QC Price (for libraries when not using sample-based billing)
+        try:
+            qc_price = (
+                LibraryPreparationCosts.objects.filter(archived=False)
+                .get(library_protocol__name="Quality Control")
+                .price
+            )
+        except LibraryPreparationCosts.DoesNotExist:
+            qc_price = 0
+            logger.warning("Preparation Cost for 'Quality Control' is not set.")
+
         # Fetch Sequencing Costs
         sequencing_costs = SequencingCosts.objects.filter(archived=False).values(
             "sequencer", "read_length", "price"
@@ -132,6 +143,7 @@ class InvoicingSerializer(ModelSerializer):
                 "fixed_costs": fixed_costs,
                 "preparation_costs": preparation_costs,
                 "sequencing_costs": sequencing_costs,
+                "qc_price": qc_price,
                 "start_date": start_date,
                 "end_date": end_date,
             }
@@ -306,6 +318,7 @@ class InvoicingSerializer(ModelSerializer):
         fixed_costs = self.context["fixed_costs"]
         preparation_costs = self.context["preparation_costs"]
         sequencing_costs = self.context["sequencing_costs"]
+        qc_price = self.context.get("qc_price", 0)
 
         """
         Fix so samples of a request that have been sequenced in different months are not billed twice
@@ -349,15 +362,8 @@ class InvoicingSerializer(ModelSerializer):
         if split[1] == "samples":
             costs = preparation_costs.get(library_protocol, 0) * Decimal(split[0])
         else:
-            try:
-                price = (
-                    LibraryPreparationCosts.objects.filter(archived=False)
-                    .get(library_protocol__name="Quality Control")
-                    .price
-                )
-                costs = Decimal(split[0]) * price
-            except LibraryPreparationCosts.DoesNotExist:
-                logger.exception(f"Preparation Cost for libraries is not set.")
+            costs = Decimal(split[0]) * qc_price
+
         ret["preparation_costs"] = costs
 
         ret["variable_costs"] = ret["sequencing_costs"] + ret["preparation_costs"]

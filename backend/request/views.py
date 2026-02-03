@@ -18,7 +18,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
 from django.db import transaction
-from django.db.models import Prefetch
+from django.db.models import Prefetch, prefetch_related_objects
 from django.http import (
     Http404,
     HttpRequest,
@@ -437,7 +437,14 @@ class RequestViewSet(viewsets.ModelViewSet):
     @action(methods=["get"], detail=True)
     def download_deep_sequencing_request(self, request, pk=None):  # pragma: no cover
         """Generate a deep sequencing request form in PDF."""
-        instance = self.get_object()
+        # Use a fresh queryset to ensure we get all fields for libraries/samples
+        # and prefetch what we need to avoid N+1 queries during iteration
+        instance = get_object_or_404(
+            Request.objects.select_related("user__organization", "cost_unit")
+            .prefetch_related("libraries", "samples"),
+            pk=pk
+        )
+
         user = instance.user
         organization = user.organization.name if user.organization else ""
         cost_unit = instance.cost_unit.name if instance.cost_unit else ""
@@ -711,6 +718,8 @@ class RequestViewSet(viewsets.ModelViewSet):
     @action(methods=["get"], detail=True, permission_classes=[IsAdminUser])
     def get_flowcell(self, request, *args, **kwargs):
         instance = self.get_object()
+        prefetch_related_objects(instance.libraries.all(), "pool__lane_set__flowcell")
+        prefetch_related_objects(instance.samples.all(), "pool__lane_set__flowcell")
 
         def get_flowcell_from_record(record, instance=instance):
             finalized = len(instance.statuses) == sum(
@@ -736,6 +745,8 @@ class RequestViewSet(viewsets.ModelViewSet):
     @action(methods=["get"], detail=True, permission_classes=[IsAdminUser])
     def get_poolpaths(self, request, *args, **kwargs):
         instance = self.get_object()
+        prefetch_related_objects(instance.libraries.all(), "pool")
+        prefetch_related_objects(instance.samples.all(), "pool")
         records = list(instance.libraries.all()) + list(instance.samples.all())
         poolpaths = dict.fromkeys([r.barcode for r in records])
         for r in records:
@@ -758,7 +769,24 @@ def export_request(request):
     if request.method == "POST":
         primary_key = request.POST["project-id"]
         file_format = request.POST["file-format"]
-        req = get_object_or_404(Request, id=primary_key)
+
+        # Optimize queryset to avoid N+1 queries during export
+        req = get_object_or_404(
+            Request.objects.prefetch_related(
+                "libraries__library_protocol",
+                "libraries__library_type",
+                "libraries__read_length",
+                "libraries__organism",
+                "libraries__index_type",
+                "samples__nucleic_acid_type",
+                "samples__library_protocol",
+                "samples__library_type",
+                "samples__read_length",
+                "samples__organism",
+            ),
+            id=primary_key
+        )
+
         if not request.user.is_staff and req.user != request.user:
             raise PermissionDenied()
         dataset = Dataset()

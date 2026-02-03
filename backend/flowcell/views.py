@@ -35,6 +35,8 @@ IndexI5 = apps.get_model("library_sample_shared", "IndexI5")
 Library = apps.get_model("library", "Library")
 Sample = apps.get_model("sample", "Sample")
 Pool = apps.get_model("index_generator", "Pool")
+Request = apps.get_model("request", "Request")
+LibraryProtocol = apps.get_model("library_sample_shared", "LibraryProtocol")
 
 logger = logging.getLogger("db")
 
@@ -117,16 +119,42 @@ class FlowcellViewSet(MultiEditMixin, viewsets.ReadOnlyModelViewSet):
         if timezone.is_naive(end_date):
             end_date = timezone.make_aware(end_date)
 
+        request_qs = Request.objects.only("name")
+        protocol_qs = LibraryProtocol.objects.only("name")
+        read_length_qs = ReadLength.objects.only("name")
+
         libraries_qs = (
             Library.objects.filter(~Q(status=-1))
-            .prefetch_related("read_length", "index_type")
-            .only("read_length", "index_type")
+            .prefetch_related(
+                Prefetch("read_length", queryset=read_length_qs),
+                "index_type",
+                Prefetch("library_protocol", queryset=protocol_qs),
+                Prefetch("request", queryset=request_qs),
+            )
+            .only(
+                "read_length",
+                "index_type",
+                "library_protocol",
+                "index_i7",
+                "index_i5",
+            )
         )
 
         samples_qs = (
             Sample.objects.filter(~Q(status=-1))
-            .prefetch_related("read_length", "index_type")
-            .only("read_length", "index_type")
+            .prefetch_related(
+                Prefetch("read_length", queryset=read_length_qs),
+                "index_type",
+                Prefetch("library_protocol", queryset=protocol_qs),
+                Prefetch("request", queryset=request_qs),
+            )
+            .only(
+                "read_length",
+                "index_type",
+                "library_protocol",
+                "index_i7",
+                "index_i5",
+            )
         )
 
         lanes_qs = (

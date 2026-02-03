@@ -245,6 +245,16 @@ class InvoicingViewSet(viewsets.ReadOnlyModelViewSet):
         ]
         write_header(ws, row_num, header)
 
+        # Optimization: Fetch all ReadLength and LibraryProtocol names
+        all_read_lengths = {
+            rl.pk: rl.name
+            for rl in ReadLength.objects.filter(archived=False)
+        }
+        all_protocols = {
+            lp.pk: lp.name
+            for lp in LibraryProtocol.objects.filter(archived=False)
+        }
+
         for item in data:
             if item["library_protocol"] == "":
                 continue
@@ -267,19 +277,16 @@ class InvoicingViewSet(viewsets.ReadOnlyModelViewSet):
                 )
             )
 
-            read_lengths = "; ".join(
-                ReadLength.objects.filter(archived=False, pk__in=item["read_length"])
-                .order_by("name")
-                .values_list("name", flat=True)
-            )
+            rl_names = []
+            for rl_id in item["read_length"]:
+                name = all_read_lengths.get(rl_id)
+                if name:
+                    rl_names.append(name)
+            rl_names.sort()
+            read_lengths = "; ".join(rl_names)
 
-            protocol_name = (
-                LibraryProtocol.objects.filter(
-                    archived=False, pk=item["library_protocol"]
-                )
-                .values_list("name", flat=True)
-                .first()
-            )
+            protocol_name = all_protocols.get(item["library_protocol"])
+
             if not protocol_name:
                 # Legacy requests may reference deleted or archived protocols.
                 protocol_name = "Unknown"
