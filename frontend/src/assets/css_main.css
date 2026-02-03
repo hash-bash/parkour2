@@ -1,4 +1,5 @@
 @import "./css_base.css";
+@import "./css_tabulator.css";
 
 @media (hover: hover) {
   a:hover {

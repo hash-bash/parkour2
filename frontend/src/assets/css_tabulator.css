@@ -1,0 +1,230 @@
+.custom-tabulator-table .tabulator {
+  height: 100%;
+  font-size: 12px;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px !important;
+}
+
+.custom-tabulator-table.lite .tabulator {
+  border-bottom-left-radius: 0px !important;
+  border-bottom-right-radius: 0px !important;
+}
+
+.custom-tabulator-table .tabulator-table {
+  background-color: #7788992d !important;
+  z-index: 10;
+}
+
+.custom-tabulator-table .tabulator-header {
+  border: none !important;
+}
+
+.custom-tabulator-table .tabulator-placeholder {
+  text-align: center;
+  width: 600px !important;
+  height: 100%;
+  background-color: #7788992d !important;
+  white-space: nowrap;
+}
+
+.custom-tabulator-table .tabulator-range-active {
+  border: none !important;
+}
+
+.custom-tabulator-table .tabulator-cell {
+  height: 30px !important;
+  line-height: 6px;
+  padding: 0px !important;
+  border-bottom: 1px solid #d0d0d0 !important;
+  border-right: none !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.custom-tabulator-table .tabulator-cell.right-border {
+  border-right: 1px solid #d0d0d0 !important;
+}
+
+.custom-tabulator-table .tabulator-cell.no-right-border {
+  border-right: none !important;
+}
+
+.custom-tabulator-table .tabulator-cell.disable-range-selection {
+  pointer-events: none;
+}
+
+.custom-tabulator-table .tabulator-cell.tabulator-range-selected {
+  background-color: #c0e7fd !important;
+  color: #003757 !important;
+  border-bottom: 1px solid #d0d0d0 !important;
+}
+
+.custom-tabulator-table .tabulator-cell.tabulator-editing {
+  background-color: lightgoldenrodyellow !important;
+  padding-left: 10px !important;
+}
+
+.custom-tabulator-table .tabulator-cell.tabulator-editable {
+  cursor: pointer;
+}
+
+.custom-tabulator-table .tabulator-cell.tabulator-frozen {
+  z-index: 1 !important;
+}
+
+.custom-tabulator-table .tabulator-cell.user-entry-column {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.custom-tabulator-table .tabulator-cell.facility-entry-column {
+  background-color: #c4ecc2;
+  color: #388e3c;
+}
+
+.custom-tabulator-table .tabulator-col {
+  border-right: 1px solid #d0d0d0 !important;
+  border-bottom: 1px solid #d0d0d0 !important;
+}
+
+.custom-tabulator-table .tabulator-col-group-cols {
+  border: none !important;
+  border-top: 1px solid #d0d0d0 !important;
+}
+
+.custom-tabulator-table .tabulator-col-content {
+  padding: 5px !important;
+}
+
+.custom-tabulator-table .tabulator-row {
+  min-height: 0;
+  height: 30px !important;
+}
+
+.custom-tabulator-table .tabulator-row[role="row"] {
+  border: none !important;
+}
+
+.custom-tabulator-table .tabulator-row:not(.tabulator-group) {
+  background-color: white !important;
+}
+
+.custom-tabulator-table.lite .tabulator-row:not(.tabulator-group) {
+  border-right: 1px solid #d0d0d0 !important;
+}
+
+.custom-tabulator-table .tabulator-row:not(.tabulator-group):hover {
+  mix-blend-mode: multiply;
+}
+
+.custom-tabulator-table .tabulator-row.tabulator-group {
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: white;
+  border-top: 1px solid #d0d0d0 !important;
+  border-bottom: 1px solid #d0d0d0 !important;
+  z-index: 20;
+}
+
+.custom-tabulator-table .tabulator-row.tabulator-group:hover {
+  background-color: white;
+}
+
+.custom-tabulator-table .tabulator-row:hover .group-action-buttons-container {
+  display: flex;
+}
+
+.custom-tabulator-table .tabulator-header-filter input {
+  height: 24px;
+  font-size: 12px !important;
+  border: 1px solid #d0d0d0 !important;
+}
+
+.custom-tabulator-table .tabulator-group.hidden-group {
+  display: none !important;
+}
+
+.custom-tabulator-table .no-group-by .tabulator-row-odd:nth-child(1) {
+  margin-top: 5px;
+}
+
+.custom-tabulator-table .no-group-by .tabulator-row-odd:nth-child(1) .tabulator-cell {
+  border-top: 1px solid #d0d0d0 !important;
+}
+
+.custom-tabulator-table .checkbox-column:not(.tabulator-col) {
+  padding: 10px 0px !important;
+}
+
+.custom-tabulator-table .title-field-group > .tabulator-col-content > div > div {
+  font-weight: 600 !important;
+  color: rgb(99, 99, 99) !important;
+}
+
+.custom-tabulator-table input[type="number"]::-webkit-outer-spin-button,
+.custom-tabulator-table input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.custom-tabulator-table input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.custom-tabulator-table input[type="number"]::-moz-number-spin-box,
+.custom-tabulator-table input[type="number"]::-moz-number-spin-up,
+.custom-tabulator-table input[type="number"]::-moz-number-spin-down {
+  display: none;
+}
+
+.tabulator-edit-list .tabulator-edit-list-item.active,
+.tabulator-edit-list .tabulator-edit-list-item.focused,
+.tabulator-edit-list .tabulator-edit-list-item.active .tabulator-edit-list-item-label,
+.tabulator-edit-list .tabulator-edit-list-item.focused .tabulator-edit-list-item-label {
+  background-color: #2967c5;
+  color: #fff !important;
+  outline: none;
+}
+
+.custom-tabulator-table .tabulator-cell.required-empty {
+  background-color: #f5bcbc;
+}
+
+.custom-tabulator-table .tabulator-cell.cell-invalid:not(.tabulator-range-selected) {
+  background-color: #f5bcbc !important;
+}
+
+.custom-tabulator-table .tabulator-row.row-has-errors .tabulator-cell.required-filled:not(.disable-editing) {
+  background-color: #f9e5e5;
+}
+
+.custom-tabulator-table .tabulator-row.row-has-errors .tabulator-cell:not(.required-empty):not(.cell-invalid):not(.tabulator-range-selected):not(.disable-editing) {
+  background-color: #f9e5e5;
+}
+
+.custom-tabulator-table .tabulator-row.row-has-errors .tabulator-cell.disable-editing:not(.required-empty):not(.cell-invalid):not(.tabulator-range-selected) {
+  background-color: #f9e5e5;
+}
+
+.custom-tabulator-table .tabulator-row.row-all-valid .tabulator-cell.required-filled:not(.disable-editing),
+.custom-tabulator-table .tabulator-row.row-all-valid .tabulator-cell:not(.required-empty):not(.cell-invalid):not(.tabulator-range-selected):not(.disable-editing) {
+  background-color: #e4fae3;
+}
+
+.custom-tabulator-table .tabulator-row.row-all-valid .tabulator-cell.disable-editing:not(.required-empty):not(.cell-invalid):not(.tabulator-range-selected) {
+  background-color: #e4fae3;
+}
+
+.custom-tabulator-table .tabulator-cell.disable-editing {
+  background-image: repeating-linear-gradient(135deg,
+      rgba(156, 163, 175, 0.3),
+      rgba(156, 163, 175, 0.3) 6px,
+      rgba(255, 255, 255, 0) 6px,
+      rgba(255, 255, 255, 0) 12px) !important;
+  color: #6f7680 !important;
+  cursor: not-allowed;
+}

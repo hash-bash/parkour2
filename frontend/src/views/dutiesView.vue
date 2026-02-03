@@ -183,21 +183,14 @@ import {
   showNotification,
   handleError,
   getProp,
-  urlStringStartsWith
+  urlStringStartsWith,
+  createAxiosObject
 } from "../utilities/utilityFunctions";
 import { toRaw } from "vue";
-import axios from "axios";
 import moment from "moment";
-import Cookies from "js-cookie";
 import iconDutiesHeader from "../assets/icons/header_duties.svg";
 
-const axiosRef = axios.create({
-  withCredentials: true,
-  headers: {
-    "content-type": "application/json",
-    "X-CSRFToken": Cookies.get("csrftoken")
-  }
-});
+const axiosRef = createAxiosObject();
 
 const urlStringStart = urlStringStartsWith();
 

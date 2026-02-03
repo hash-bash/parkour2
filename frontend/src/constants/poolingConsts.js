@@ -1,7 +1,8 @@
 import {
   applyContextMenuToColumns,
   cellContextMenu,
-  ellipsisContainer
+  ellipsisContainer,
+  createColumn,
 } from "../utilities/utilityFunctions";
 import iconSelectAll from "../assets/icons/action_select_all.svg";
 import iconDeselectAll from "../assets/icons/action_deselect_all.svg";
@@ -16,7 +17,7 @@ export function poolingGroupHeader(
   headerClass,
   totalDepth,
   pool_size,
-  comment
+  comment,
 ) {
   return `
   <div class="${headerClass}" style="display: flex; justify-content: space-between; align-items: center; padding: 5px;">
@@ -55,310 +56,269 @@ export function poolingGroupHeader(
 }
 
 export function poolingColumnDefs(getTabulatorInstance) {
-  const columns = [
-    {
-      field: "selected",
-      visible: true,
-      headerVertical: false,
-      frozen: true,
-      resizable: false,
-      formatter: (cell) => {
-        const rowData = cell.getRow().getData();
-        const shouldShowCheckbox = !(
-          rowData.record_type === "Sample" &&
-          (rowData.status === 2 || rowData.status === -2)
-        );
-        if (!shouldShowCheckbox) {
-          return "";
-        }
-        const checkbox = `
-              <input
-                type="checkbox"
-                title="Select"
-                style="top:-4px"
-                ${rowData.selected ? "checked" : ""}
-              />
-            `;
-        return checkbox;
-      },
-      hozAlign: "center",
-      width: 30,
-      minWidth: 30,
-      cssClass: "checkbox-column right-border",
-      contextMenu: () =>
-        cellContextMenu(false, false, false, getTabulatorInstance),
-      cellClick: function (e, cell) {
-        const row = cell.getRow();
-        const rowData = row.getData();
-        const checkbox = e.target;
-        if (checkbox && checkbox.type === "checkbox") {
-          rowData.selected = checkbox.checked;
-        }
+  const checkboxColumn = {
+    field: "selected",
+    visible: true,
+    headerVertical: false,
+    frozen: true,
+    resizable: false,
+    formatter: (cell) => {
+      const rowData = cell.getRow().getData();
+      const shouldShowCheckbox = !(
+        rowData.record_type === "Sample" &&
+        (rowData.status === 2 || rowData.status === -2)
+      );
+      if (!shouldShowCheckbox) {
+        return "";
+      }
+      return `<input type="checkbox" title="Select" style="top:-4px" ${
+        rowData.selected ? "checked" : ""
+      } />`;
+    },
+    hozAlign: "center",
+    width: 30,
+    minWidth: 30,
+    cssClass: "checkbox-column right-border",
+    contextMenu: () =>
+      cellContextMenu(false, false, false, getTabulatorInstance),
+    cellClick: function (e, cell) {
+      const row = cell.getRow();
+      const rowData = row.getData();
+      const checkbox = e.target;
+      if (checkbox && checkbox.type === "checkbox") {
+        rowData.selected = checkbox.checked;
       }
     },
-    {
-      title: "Request",
-      field: "request_name",
-      minWidth: 140,
-      headerFilter: true,
-      headerTooltip: "Request ID",
-      visible: true,
-      frozen: true,
-      cssClass: "right-border",
-      contextMenu: () =>
-        cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const pool_name = cell.getRow().getData().pool_name;
-        const name = cell.getValue();
-        const tabulatorInstance = getTabulatorInstance();
-        const tableGroupsToggleState =
-          tabulatorInstance.getTableGroupsToggleState();
-        return `
+  };
+
+  const requestColumn = createColumn("request_name", "Request", {
+    minWidth: 140,
+    headerFilter: true,
+    headerTooltip: "Request ID",
+    frozen: true,
+    cssClass: "right-border",
+    contextMenu: () =>
+      cellContextMenu(true, false, false, getTabulatorInstance),
+    formatter: (cell) => {
+      const pool_name = cell.getRow().getData().pool_name;
+      const name = cell.getValue();
+      const tabulatorInstance = getTabulatorInstance();
+      const tableGroupsToggleState =
+        tabulatorInstance.getTableGroupsToggleState();
+      return `
               <div style="padding: 4px 12px; display: flex; align-items: center;">
                 <span title="${name}" style="padding: 8px 0px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">${
                   (tableGroupsToggleState == 2 ? pool_name + " ➜ " : "") + name
                 }</span>
               </div>`;
-      }
     },
-    {
-      title: "Name",
-      field: "name",
-      minWidth: 60,
-      headerFilter: true,
-      headerTooltip: "Library Name",
-      visible: true,
-      frozen: true,
-      cssClass: "right-border",
-      contextMenu: () =>
-        cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const value = cell.getValue();
-        const finalString = value || "-";
-        return ellipsisContainer(finalString, false);
-      }
+  });
+
+  const nameColumn = createColumn("name", "Name", {
+    minWidth: 60,
+    headerFilter: true,
+    headerTooltip: "Library Name",
+    frozen: true,
+    cssClass: "right-border",
+    contextMenu: () =>
+      cellContextMenu(true, false, false, getTabulatorInstance),
+    formatter: (cell) => ellipsisContainer(cell.getValue() || "-", false),
+  });
+
+  const barcodeColumn = createColumn("barcode", "Barcode", {
+    width: 95,
+    minWidth: 95,
+    headerFilter: true,
+    headerTooltip: "Barcode",
+    frozen: true,
+    cssClass: "right-border",
+    contextMenu: () =>
+      cellContextMenu(true, false, false, getTabulatorInstance),
+    formatter: (cell) => {
+      const rowData = cell.getRow().getData();
+      const value = cell.getValue();
+      const barcode = value || "-";
+      const barcodeSuffix = value?.[2] ?? "";
+      const finalString =
+        rowData.record_type === "Sample" && barcodeSuffix === "L"
+          ? barcode + "*"
+          : barcode;
+      return ellipsisContainer(finalString);
     },
-    {
-      title: "Barcode",
-      field: "barcode",
-      width: 95,
-      minWidth: 95,
-      headerFilter: true,
-      headerTooltip: "Barcode",
-      visible: true,
-      frozen: true,
-      cssClass: "right-border",
-      contextMenu: () =>
-        cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const rowData = cell.getRow().getData();
-        const value = cell.getValue();
-        const barcode = value || "-";
-        const barcodeSuffix = value?.[2] ?? "";
-        const finalString =
-          rowData.record_type === "Sample" && barcodeSuffix === "L"
-            ? barcode + "*"
-            : barcode;
-        return ellipsisContainer(finalString);
-      }
+  });
+
+  const dateColumn = createColumn("create_time", "Date", {
+    width: 90,
+    minWidth: 60,
+    headerFilter: true,
+    headerTooltip: "Date",
+    cssClass: "regular-column",
+    contextMenu: () =>
+      cellContextMenu(true, false, false, getTabulatorInstance),
+    formatter: (cell) => ellipsisContainer(cell.getValue() || "-"),
+  });
+
+  const concentrationColumn = createColumn("concentration_library", "ng/µl", {
+    minWidth: 60,
+    width: "6%",
+    headerVertical: false,
+    headerTooltip: "Concentration Library (ng/µl)",
+    cssClass: "regular-column",
+    contextMenu: () =>
+      cellContextMenu(true, false, false, getTabulatorInstance),
+    formatter: (cell) => {
+      const rawValue = cell.getValue();
+      const value = Number(rawValue);
+      const finalString =
+        rawValue === "" || rawValue === undefined || isNaN(value)
+          ? "-"
+          : value === 0
+            ? "0.0"
+            : value.toFixed(1);
+      return ellipsisContainer(finalString);
     },
-    {
-      title: "Date",
-      field: "create_time",
-      width: 90,
-      minWidth: 60,
-      headerFilter: true,
-      headerTooltip: "Date",
-      visible: true,
-      cssClass: "regular-column",
-      contextMenu: () =>
-        cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const value = cell.getValue();
-        const finalString = value || "-";
-        return ellipsisContainer(finalString);
-      }
+  });
+
+  const percentTotalColumn = createColumn("combined_smear_analysis", "% Total", {
+    minWidth: 60,
+    width: "6%",
+    headerVertical: false,
+    headerTooltip: "Smear Analysis (% Total)",
+    cssClass: "regular-column",
+    contextMenu: () =>
+      cellContextMenu(true, false, false, getTabulatorInstance),
+    formatter: (cell) => {
+      const rawValue = cell.getValue();
+      return ellipsisContainer(rawValue + "%" || "-");
     },
-    {
-      title: "ng/µl",
-      field: "concentration_library",
-      minWidth: 60,
-      width: "6%",
-      headerVertical: false,
-      headerTooltip: "Concentration Library (ng/µl)",
-      visible: true,
-      cssClass: "regular-column",
-      contextMenu: () =>
-        cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const rawValue = cell.getValue();
-        const value = Number(rawValue);
-        const finalString =
-          rawValue === "" || rawValue === undefined || isNaN(value)
-            ? "-"
-            : value === 0
-              ? "0.0"
-              : value.toFixed(1);
-        return ellipsisContainer(finalString);
+  });
+
+  const meanFragmentSizeColumn = createColumn("mean_fragment_size", "bp", {
+    minWidth: 60,
+    width: "6%",
+    headerVertical: false,
+    headerTooltip: "Mean Fragment Size (bp)",
+    cssClass: "regular-column",
+    contextMenu: () =>
+      cellContextMenu(true, false, false, getTabulatorInstance),
+    formatter: (cell) => {
+      const rawValue = cell.getValue();
+      const value = Number(rawValue);
+      let finalString;
+      if (rawValue === "" || rawValue === undefined || isNaN(value)) {
+        finalString = "-";
+      } else {
+        finalString = Math.round(value).toString();
       }
+      return ellipsisContainer(finalString);
     },
-    {
-      title: "% Total",
-      field: "combined_smear_analysis",
-      minWidth: 60,
-      width: "6%",
-      headerVertical: false,
-      headerTooltip: "Smear Analysis (% Total)",
-      visible: true,
-      cssClass: "regular-column",
-      contextMenu: () =>
-        cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const rawValue = cell.getValue();
-        return ellipsisContainer(rawValue + "%" || "-");
+  });
+
+  const depthColumn = createColumn("sequencing_depth", "Depth (M)", {
+    minWidth: 60,
+    width: "6%",
+    headerVertical: false,
+    headerTooltip: "Sequencing Depth (M)",
+    cssClass: "regular-column",
+    contextMenu: () =>
+      cellContextMenu(true, false, false, getTabulatorInstance),
+    formatter: (cell) => {
+      const rawValue = cell.getValue();
+      const value = Number(rawValue);
+      let finalString;
+      if (rawValue === "" || rawValue === undefined || isNaN(value)) {
+        finalString = "-";
+      } else {
+        finalString = Math.round(value).toString();
       }
+      return ellipsisContainer(finalString);
     },
-    {
-      title: "bp",
-      field: "mean_fragment_size",
-      minWidth: 60,
-      width: "6%",
-      headerVertical: false,
-      headerTooltip: "Mean Fragment Size (bp)",
-      visible: true,
-      cssClass: "regular-column",
-      contextMenu: () =>
-        cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const rawValue = cell.getValue();
-        const value = Number(rawValue);
-        let finalString;
-        if (rawValue === "" || rawValue === undefined || isNaN(value)) {
-          finalString = "-";
-        } else {
-          finalString = Math.round(value).toString();
-        }
-        return ellipsisContainer(finalString);
-      }
+  });
+
+  const percentageLibraryColumn = createColumn("percentage_library", "%", {
+    minWidth: 60,
+    width: "6%",
+    headerVertical: false,
+    headerTooltip: "% Library in Pool",
+    cssClass: "regular-column",
+    contextMenu: () =>
+      cellContextMenu(true, false, false, getTabulatorInstance),
+    formatter: (cell) => {
+      const rawValue = cell.getValue();
+      return ellipsisContainer(rawValue + "%" || "-");
     },
-    {
-      title: "Depth (M)",
-      field: "sequencing_depth",
-      minWidth: 60,
-      width: "6%",
-      headerVertical: false,
-      headerTooltip: "Sequencing Depth (M)",
-      visible: true,
-      cssClass: "regular-column",
-      contextMenu: () =>
-        cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const rawValue = cell.getValue();
-        const value = Number(rawValue);
-        let finalString;
-        if (rawValue === "" || rawValue === undefined || isNaN(value)) {
-          finalString = "-";
-        } else {
-          finalString = Math.round(value).toString();
-        }
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "%",
-      field: "percentage_library",
-      minWidth: 60,
-      width: "6%",
-      headerVertical: false,
-      headerTooltip: "% Library in Pool",
-      visible: true,
-      cssClass: "regular-column",
-      contextMenu: () =>
-        cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const rawValue = cell.getValue();
-        return ellipsisContainer(rawValue + "%" || "-");
-      }
-    },
-    {
-      title: "Coord",
-      field: "coordinate",
-      width: 80,
-      headerVertical: false,
-      headerTooltip: "Index Pair Coordinate",
-      visible: true,
-      cssClass: "regular-column",
-      contextMenu: () =>
-        cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const finalString = cell.getValue() || "-";
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "I7 ID",
-      field: "index_i7_id",
-      minWidth: 60,
-      width: "6%",
-      headerVertical: false,
-      headerTooltip: "Index I7 ID",
-      visible: true,
-      cssClass: "regular-column",
-      contextMenu: () =>
-        cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const finalString = cell.getValue() || "-";
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "Index I7",
-      field: "index_i7",
-      minWidth: 60,
-      width: "6%",
-      headerVertical: false,
-      headerTooltip: "Index I7 ID",
-      visible: true,
-      cssClass: "regular-column",
-      contextMenu: () =>
-        cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const finalString = cell.getValue() || "-";
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "I5 ID",
-      field: "index_i5_id",
-      minWidth: 60,
-      width: "6%",
-      headerVertical: false,
-      headerTooltip: "Index I5 ID",
-      visible: true,
-      cssClass: "regular-column",
-      contextMenu: () =>
-        cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const finalString = cell.getValue() || "-";
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "Index I5",
-      field: "index_i5",
-      minWidth: 60,
-      width: "6%",
-      headerVertical: false,
-      headerTooltip: "Index I5 ID",
-      visible: true,
-      cssClass: "regular-column",
-      contextMenu: () =>
-        cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const finalString = cell.getValue() || "-";
-        return ellipsisContainer(finalString);
-      }
-    }
+  });
+
+  const coordinateColumn = createColumn("coordinate", "Coord", {
+    width: 80,
+    headerVertical: false,
+    headerTooltip: "Index Pair Coordinate",
+    cssClass: "regular-column",
+    contextMenu: () =>
+      cellContextMenu(true, false, false, getTabulatorInstance),
+    formatter: (cell) => ellipsisContainer(cell.getValue() || "-"),
+  });
+
+  const i7IdColumn = createColumn("index_i7_id", "I7 ID", {
+    minWidth: 60,
+    width: "6%",
+    headerVertical: false,
+    headerTooltip: "Index I7 ID",
+    cssClass: "regular-column",
+    contextMenu: () =>
+      cellContextMenu(true, false, false, getTabulatorInstance),
+    formatter: (cell) => ellipsisContainer(cell.getValue() || "-"),
+  });
+
+  const indexI7Column = createColumn("index_i7", "Index I7", {
+    minWidth: 60,
+    width: "6%",
+    headerVertical: false,
+    headerTooltip: "Index I7 ID",
+    cssClass: "regular-column",
+    contextMenu: () =>
+      cellContextMenu(true, false, false, getTabulatorInstance),
+    formatter: (cell) => ellipsisContainer(cell.getValue() || "-"),
+  });
+
+  const i5IdColumn = createColumn("index_i5_id", "I5 ID", {
+    minWidth: 60,
+    width: "6%",
+    headerVertical: false,
+    headerTooltip: "Index I5 ID",
+    cssClass: "regular-column",
+    contextMenu: () =>
+      cellContextMenu(true, false, false, getTabulatorInstance),
+    formatter: (cell) => ellipsisContainer(cell.getValue() || "-"),
+  });
+
+  const indexI5Column = createColumn("index_i5", "Index I5", {
+    minWidth: 60,
+    width: "6%",
+    headerVertical: false,
+    headerTooltip: "Index I5 ID",
+    cssClass: "regular-column",
+    contextMenu: () =>
+      cellContextMenu(true, false, false, getTabulatorInstance),
+    formatter: (cell) => ellipsisContainer(cell.getValue() || "-"),
+  });
+
+  const columns = [
+    checkboxColumn,
+    requestColumn,
+    nameColumn,
+    barcodeColumn,
+    dateColumn,
+    concentrationColumn,
+    percentTotalColumn,
+    meanFragmentSizeColumn,
+    depthColumn,
+    percentageLibraryColumn,
+    coordinateColumn,
+    i7IdColumn,
+    indexI7Column,
+    i5IdColumn,
+    indexI5Column,
   ];
 
   return applyContextMenuToColumns(columns, getTabulatorInstance, {
@@ -381,7 +341,7 @@ export function poolingExportColumns() {
     {
       header: "Concentration Library",
       key: "concentration_library",
-      width: 20
+      width: 20,
     },
     { header: "% Total", key: "combined_smear_analysis", width: 20 },
     { header: "bp", key: "mean_fragment_size", width: 20 },
@@ -391,6 +351,6 @@ export function poolingExportColumns() {
     { header: "I7 ID", key: "index_i7_id", width: 20 },
     { header: "Index I7", key: "index_i7", width: 20 },
     { header: "I5 ID", key: "index_i5_id", width: 20 },
-    { header: "Index I5", key: "index_i5", width: 20 }
+    { header: "Index I5", key: "index_i5", width: 20 },
   ];
 }

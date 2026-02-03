@@ -1,221 +1,242 @@
-﻿<template>
-  <div v-if="show" class="request-editor-overlay popup-overlay" :class="{ 'drag-over': isDragOver }"
-    @dragover.prevent="handleDragOver" @dragenter.prevent="handleDragEnter" @dragleave.prevent="handleDragLeave"
-    @drop.prevent="handleDrop">
+<template>
+  <div
+    v-if="show"
+    class="request-editor-overlay popup-overlay"
+    :class="{ 'drag-over': isDragOver }"
+    @dragover.prevent="handleDragOver"
+    @dragenter.prevent="handleDragEnter"
+    @dragleave.prevent="handleDragLeave"
+    @drop.prevent="handleDrop"
+  >
     <div v-if="canEditRequest" class="drag-drop-indicator">
-      <div style="display: flex; justify-content: center; align-items: center; height: 200px;">
-        <p>
-          Drop <span style="font-weight: bold">files</span> here to upload
-        </p>
+      <div
+        style="
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 200px;
+        "
+      >
+        <p>Drop <span style="font-weight: bold">files</span> here to upload</p>
       </div>
     </div>
     <div class="request-editor-modal">
-      <div v-if="fakeLoading" class="request-editor-loading-overlay" aria-hidden="true"></div>
-      <div v-if="isEditMode && !requestDataReady" class="request-editor-loading-overlay" aria-live="polite"
-        aria-busy="true">
+      <div
+        v-if="fakeLoading"
+        class="request-editor-loading-overlay"
+        aria-hidden="true"
+      ></div>
+      <div
+        v-if="isEditMode && !requestDataReady"
+        class="request-editor-loading-overlay"
+        aria-live="polite"
+        aria-busy="true"
+      >
         <div class="spinner"></div>
         <p>Loading request details...</p>
       </div>
-      <div class="request-editor-content" :class="{ collapsed: isFormPanelCollapsed }">
-        <div class="request-editor-header-left" :class="{ collapsed: isFormPanelCollapsed }">
+      <div
+        class="request-editor-content"
+        :class="{ collapsed: isFormPanelCollapsed }"
+      >
+        <div
+          class="request-editor-header-left"
+          :class="{ collapsed: isFormPanelCollapsed }"
+        >
           <span class="title-with-icon">
-            <font-awesome-icon icon="fa-solid fa-file-lines" class="header-icon" />
-            <span class="header-title-text" :title="headerTitle">{{ headerTitle }}</span>
+            <font-awesome-icon
+              icon="fa-solid fa-file-lines"
+              class="header-icon"
+            />
+            <span class="header-title-text" :title="headerTitle">{{
+              headerTitle
+            }}</span>
           </span>
         </div>
-        <button class="panel-toggle-button vertical-toggle" type="button" @click="toggleFormPanel"
-          :aria-label="isFormPanelCollapsed ? 'Expand details panel' : 'Collapse details panel'">
-          <font-awesome-icon :icon="isFormPanelCollapsed ? 'fa-solid fa-angle-right' : 'fa-solid fa-angle-left'" />
+        <button
+          class="panel-toggle-button vertical-toggle"
+          type="button"
+          @click="toggleFormPanel"
+          :aria-label="
+            isFormPanelCollapsed
+              ? 'Expand details panel'
+              : 'Collapse details panel'
+          "
+        >
+          <font-awesome-icon
+            :icon="
+              isFormPanelCollapsed
+                ? 'fa-solid fa-angle-right'
+                : 'fa-solid fa-angle-left'
+            "
+          />
         </button>
         <div class="request-editor-header-right">
-          <div class="header-table-actions" :class="{ hidden: !canEditRequest }">
+          <div
+            class="header-table-actions"
+            :class="{ hidden: !canEditRequest }"
+          >
             <div class="add-count-group">
-              <input id="add-count-input" v-model.number="addRowCount" type="number" min="0"
-                :class="['add-count-input', { 'input-error': hasEditedAddCount && !addRowCount }]"
-                :disabled="!canEditRequest" @input="hasEditedAddCount = true" @blur="hasEditedAddCount = true" />
-              <button class="icon-button text-button add-count-button" type="button" :title="addButtonTitle"
-                :disabled="!canEditRequest" @click="addDraftRow(addRowCount)">
+              <input
+                id="add-count-input"
+                v-model.number="addRowCount"
+                type="number"
+                min="0"
+                :class="[
+                  'add-count-input',
+                  { 'input-error': hasEditedAddCount && !addRowCount },
+                ]"
+                :disabled="!canEditRequest"
+                @input="hasEditedAddCount = true"
+                @blur="hasEditedAddCount = true"
+              />
+              <button
+                class="icon-button text-button add-count-button"
+                type="button"
+                :title="addButtonTitle"
+                :disabled="!canEditRequest"
+                @click="addDraftRow(addRowCount)"
+              >
                 <font-awesome-icon icon="fa-solid fa-square-plus" />
                 <span>{{ addButtonLabel }}</span>
               </button>
             </div>
-            <button class="icon-button text-button" type="button" :title="deleteButtonTitle"
-              :disabled="!canEditRequest || !selectedDraftRowIds.length" @click="requestDeleteSelectedDraftRows">
+            <button
+              class="icon-button text-button"
+              type="button"
+              :title="deleteButtonTitle"
+              :disabled="!canEditRequest || !selectedDraftRowIds.length"
+              @click="requestDeleteSelectedDraftRows"
+            >
               <font-awesome-icon icon="fa-solid fa-trash" />
               <span>Delete Selected</span>
             </button>
           </div>
-          <div class="header-table-actions utility-actions" :class="{ hidden: !canEditRequest }"
-            title="Clipboard Actions">
-            <button class="icon-button text-button clipboard-button" type="button"
-              title="Cut the selected range to the clipboard" :disabled="!canEditRequest || !hasEditableRangeSelection"
-              @click="triggerTableCut">
+          <div
+            class="header-table-actions utility-actions"
+            :class="{ hidden: !canEditRequest }"
+            title="Clipboard Actions"
+          >
+            <button
+              class="icon-button text-button clipboard-button"
+              type="button"
+              title="Cut the selected range to the clipboard"
+              :disabled="!canEditRequest || !hasEditableRangeSelection"
+              @click="triggerTableCut"
+            >
               <font-awesome-icon icon="fa-solid fa-scissors" />
               <span>Cut</span>
             </button>
-            <button class="icon-button text-button clipboard-button" type="button"
+            <button
+              class="icon-button text-button clipboard-button"
+              type="button"
               title="Copy the selected range to the clipboard"
-              :disabled="!requestEditorDraftRows.length || !hasRangeSelection" @click="triggerTableCopy">
+              :disabled="!requestEditorDraftRows.length || !hasRangeSelection"
+              @click="triggerTableCopy"
+            >
               <font-awesome-icon icon="fa-solid fa-copy" />
               <span>Copy</span>
             </button>
-            <button class="icon-button text-button clipboard-button" type="button"
+            <button
+              class="icon-button text-button clipboard-button"
+              type="button"
               title="Paste clipboard data into the selected range"
-              :disabled="!canEditRequest || !hasEditableRangeSelection" @click="triggerTablePaste">
+              :disabled="!canEditRequest || !hasEditableRangeSelection"
+              @click="triggerTablePaste"
+            >
               <font-awesome-icon icon="fa-solid fa-paste" />
               <span>Paste</span>
             </button>
-            <button class="icon-button text-button clipboard-button" type="button"
-              title="Clear values in the selected range" :disabled="!canEditRequest || !hasEditableRangeSelection"
-              @click="triggerTableClear">
+            <button
+              class="icon-button text-button clipboard-button"
+              type="button"
+              title="Clear values in the selected range"
+              :disabled="!canEditRequest || !hasEditableRangeSelection"
+              @click="triggerTableClear"
+            >
               <font-awesome-icon icon="fa-solid fa-eraser" />
               <span>Clear</span>
             </button>
-            <button class="icon-button text-button clipboard-button" type="button"
+            <button
+              class="icon-button text-button clipboard-button"
+              type="button"
               title="Apply the selected cell value to this column for all rows in this request"
-              :disabled="!canEditRequest || !isSingleCellSelected" @click="triggerApplyToAll">
+              :disabled="!canEditRequest || !isSingleCellSelected"
+              @click="triggerApplyToAll"
+            >
               <font-awesome-icon icon="fa-solid fa-wand-magic-sparkles" />
               <span>Apply to All</span>
             </button>
           </div>
           <div class="header-actions">
-            <button class="help-button" type="button" @click="openHelpPage" title="Open MAX page on Intranet">
+            <button
+              class="help-button"
+              type="button"
+              @click="openHelpPage"
+              title="Open MAX page on Intranet"
+            >
               ?
             </button>
-            <button class="popup-close-button" type="button" @click="requestCloseModal" :disabled="saving">
+            <button
+              class="popup-close-button"
+              type="button"
+              @click="requestCloseModal"
+              :disabled="saving"
+            >
               &times;
             </button>
           </div>
         </div>
 
         <div class="request-editor-body-left">
-          <div class="request-panel-container" :class="{ collapsed: isFormPanelCollapsed }">
-            <section class="request-form-panel" :class="{ collapsed: isFormPanelCollapsed }">
-              <div class="request-form-actions">
-                <div class="controls-group" :class="{ 'view-only': isEditMode }">
-                  <label class="record-type-switch" title="Switch between Library and Sample entry modes">
-                    <input type="checkbox" :checked="requestEditorMode === 'sample'" :disabled="!canEditRequest"
-                      @change="requestRecordTypeSwitch($event)" />
-                    <span class="slider">
-                      <span class="option" :class="{ active: requestEditorMode === 'library' }">
-                        Library
-                      </span>
-                      <span class="option" :class="{ active: requestEditorMode === 'sample' }">
-                        Sample
-                      </span>
-                    </span>
-                  </label>
-                </div>
-                <div v-if="requestEditorMode === 'sample' && !isEditMode" class="download-buttons">
-                  <a class="download-button" :href="gmoFormUrl" target="_blank" rel="noopener"
-                    title="Download Formblatt S1 (GMO)">
-                    <font-awesome-icon icon="fa-solid fa-download" />
-                    <span>Formblatt S1</span>
-                  </a>
-                  <a class="download-button" :href="relacsDownloadUrl" target="_blank" rel="noopener"
-                    title="Download RELACS Pellets Abs form">
-                    <font-awesome-icon icon="fa-solid fa-download" />
-                    <span>RELACS Pellets Abs</span>
-                  </a>
-                </div>
-              </div>
-
-              <label class="field-block">
-                <span>
-                  Cost Unit<span v-if="!isStaffUser" class="required">*</span>
-                </span>
-                <select v-model="newRequest.cost_unit" :disabled="!canEditRequest" :class="[
-                  costUnitError ? 'input-error' : '',
-                  !newRequest.cost_unit ? 'placeholder' : ''
-                ]">
-                  <option value="" disabled>Select Cost Unit</option>
-                  <option v-for="cu in costUnits" :key="cu.id" :value="cu.id">
-                    {{ cu.name }}
-                  </option>
-                </select>
-                <div v-if="costUnitError" class="field-error">
-                  {{ costUnitError }}
-                </div>
-              </label>
-
-              <label class="field-block">
-                <span>
-                  Description<span class="required">*</span>
-                </span>
-                <textarea v-model="newRequest.description" class="description-textarea" rows="6"
-                  :placeholder="isEditMode
-                    ? 'Description not provided'
-                    : 'Provide a brief description of your project, including any details important for handling and documentation. Indicate whether you have a backup of your study material (Yes/No).'"
-                  :class="{ 'input-error': descriptionError }" :readonly="!canEditRequest"></textarea>
-                <div v-if="descriptionError" class="field-error">
-                  {{ descriptionError }}
-                </div>
-              </label>
-
-              <div class="files-section">
-                <div class="files-header">
-                  <div>
-                    <span>Files</span>
-                    <small>Upload request related documents.</small>
-                  </div>
-                  <button v-if="canEditRequest" class="header-button ghost" type="button" :disabled="!canEditRequest"
-                    @click="triggerRequestFileUpload">
-                    <font-awesome-icon icon="fa-solid fa-square-plus" style="color: white" />
-                    <span>Add Files</span>
-                  </button>
-                  <input ref="requestFileInput" type="file" multiple @change="handleRequestFileUpload"
-                    style="display: none" />
-                </div>
-                <div class="files-table-wrapper">
-                  <table class="files-table" :class="{ 'files-table-empty': !uploadedRequestFiles.length }">
-                    <thead>
-                      <tr>
-                        <th style="width: 46%">Name</th>
-                        <th style="width: 27%">Size</th>
-                        <th style="width: 27%"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-if="!uploadedRequestFiles.length">
-                        <td colspan="3" class="empty-cell">No files uploaded yet.</td>
-                      </tr>
-                      <tr v-for="file in uploadedRequestFiles" :key="file.id">
-                        <td class="file-name-cell">
-                          <span class="file-name-text" :title="file.name">{{ file.name }}</span>
-                        </td>
-                        <td class="file-size-cell" :title="formatFileSize(file.size)">
-                          {{ formatFileSize(file.size) }}
-                        </td>
-                        <td class="actions-cell">
-                          <button type="button" class="icon-action"
-                            :title="file.path ? `Download ${file.name}` : 'Download unavailable'" :disabled="!file.path"
-                            @click="downloadUploadedFile(file)">
-                            <font-awesome-icon icon="fa-solid fa-download" />
-                          </button>
-                          <button v-if="canEditRequest" type="button" class="icon-action danger"
-                            :title="`Remove ${file.name}`" :disabled="!canEditRequest"
-                            @click="requestRemoveUploadedFile(file)">
-                            <font-awesome-icon icon="fa-solid fa-xmark" />
-                          </button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-
-            </section>
+          <div
+            class="request-panel-container"
+            :class="{ collapsed: isFormPanelCollapsed }"
+          >
+            <RequestEditorForm
+              v-model="newRequest"
+              :costUnits="costUnits"
+              :isCollapsed="isFormPanelCollapsed"
+              :isEditMode="isEditMode"
+              :canEdit="canEditRequest"
+              :isStaffUser="isStaffUser"
+              :mode="requestEditorMode"
+              :costUnitError="costUnitError"
+              :descriptionError="descriptionError"
+              :gmoFormUrl="gmoFormUrl"
+              :relacsDownloadUrl="relacsDownloadUrl"
+              @switch-mode="requestRecordTypeSwitch"
+            >
+              <template #files>
+                <RequestEditorFiles
+                  :files="uploadedRequestFiles"
+                  :canEdit="canEditRequest"
+                  @upload="uploadRequestFiles"
+                  @download="downloadUploadedFile"
+                  @remove="requestRemoveUploadedFile"
+                />
+              </template>
+            </RequestEditorForm>
           </div>
         </div>
 
         <div class="request-editor-body-right">
-          <section class="records-panel" :class="{ expanded: isFormPanelCollapsed }">
+          <section
+            class="records-panel"
+            :class="{ expanded: isFormPanelCollapsed }"
+          >
             <div class="draft-table" ref="draftTableWrapper">
-              <TabulatorTable ref="requestEditorDraftTableRef" tableId="requestEditorDraftTable"
-                :rowData="requestEditorDraftRows" :columnDefs="requestEditorColumns"
-                :tableOptions="requestEditorDraftTableOptions" :groupBy="null" :groupSort="null" :groupStartOpen="false"
-                :enableDefaultFilters="false" />
+              <TabulatorTable
+                ref="requestEditorDraftTableRef"
+                tableId="requestEditorDraftTable"
+                :rowData="requestEditorDraftRows"
+                :columnDefs="requestEditorColumns"
+                :tableOptions="requestEditorDraftTableOptions"
+                :groupBy="null"
+                :groupSort="null"
+                :groupStartOpen="false"
+                :enableDefaultFilters="false"
+              />
             </div>
           </section>
         </div>
@@ -225,18 +246,36 @@
             <span>{{ footerLabel }}</span>
           </div>
           <div class="footer-actions">
-            <button class="popup-button secondary" type="button" @click="requestCloseModal" :disabled="saving">
+            <button
+              class="popup-button secondary"
+              type="button"
+              @click="requestCloseModal"
+              :disabled="saving"
+            >
               Cancel
             </button>
-            <button class="popup-button yes-button" type="button"
-              :disabled="isRequestSaving || (isEditMode && isRequestLoading) || !canEditRequest" @click="saveRequest">
+            <button
+              class="popup-button yes-button"
+              type="button"
+              :disabled="
+                isRequestSaving ||
+                (isEditMode && isRequestLoading) ||
+                !canEditRequest
+              "
+              @click="saveRequest"
+            >
               <span v-if="isRequestSaving">Saving...</span>
               <span v-else>{{ primaryActionLabel }}</span>
             </button>
           </div>
         </div>
       </div>
-      <div v-if="saving" class="saving-overlay" aria-live="polite" aria-busy="true">
+      <div
+        v-if="saving"
+        class="saving-overlay"
+        aria-live="polite"
+        aria-busy="true"
+      >
         <div class="saving-card">
           <div class="spinner"></div>
           <p>Saving request, please wait...</p>
@@ -244,97 +283,53 @@
       </div>
     </div>
 
-    <div v-if="showToggleConfirm" class="confirm-overlay" @keydown="handleConfirmKeydown" tabindex="0">
-      <div class="confirm-modal">
-        <div class="confirm-header">
-          <span class="confirm-title">Switch record type?</span>
-          <button class="popup-close-button" type="button" @click="cancelToggleSwitch">
-            &times;
-          </button>
-        </div>
-        <div class="confirm-body">
-          Switching between Library and Sample will clear all {{ switchClearLabel }} you have added.
-          Do you want to continue?
-        </div>
-        <div class="confirm-footer">
-          <button class="popup-button" type="button" @click="cancelToggleSwitch">
-            Cancel
-          </button>
-          <button class="popup-button yes-button" type="button" @click="confirmToggleSwitch">
-            OK
-          </button>
-        </div>
-      </div>
-    </div>
-    <div v-if="showDeleteConfirm" class="confirm-overlay" @keydown="handleDeleteConfirmKeydown" tabindex="0">
-      <div class="confirm-modal">
-        <div class="confirm-header">
-          <span class="confirm-title">{{ deleteConfirmTitle }}</span>
-          <button class="popup-close-button" type="button" @click="cancelDeleteSelectedRows">
-            &times;
-          </button>
-        </div>
-        <div class="confirm-body">
-          This will permanently remove {{ selectedDraftRowIds.length }} {{ deleteConfirmNoun }}.
-          Do you want to continue?
-        </div>
-        <div class="confirm-footer">
-          <button class="popup-button" type="button" @click="cancelDeleteSelectedRows">
-            Cancel
-          </button>
-          <button class="popup-button yes-button" type="button" @click="confirmDeleteSelectedRows">
-            OK
-          </button>
-        </div>
-      </div>
-    </div>
-    <div v-if="showCloseConfirm" class="confirm-overlay" @keydown="handleCloseConfirmKeydown" tabindex="0">
-      <div class="confirm-modal">
-        <div class="confirm-header">
-          <span class="confirm-title">Discard new request?</span>
-          <button class="popup-close-button" type="button" @click="cancelCloseModal">
-            &times;
-          </button>
-        </div>
-        <div class="confirm-body">
-          Closing now will discard your entered data. Do you want to continue?
-        </div>
-        <div class="confirm-footer">
-          <button class="popup-button" type="button" @click="cancelCloseModal">
-            Cancel
-          </button>
-          <button class="popup-button yes-button" type="button" @click="confirmCloseModal">
-            OK
-          </button>
-        </div>
-      </div>
-    </div>
-    <div v-if="showFileDeleteConfirm" class="confirm-overlay" @keydown="handleFileDeleteConfirmKeydown" tabindex="0">
-      <div class="confirm-modal">
-        <div class="confirm-header">
-          <span class="confirm-title">Delete file?</span>
-          <button class="popup-close-button" type="button" @click="cancelFileDelete">
-            &times;
-          </button>
-        </div>
-        <div class="confirm-body">
-          Are you sure you want to remove "{{ pendingFileDelete?.name }}" from this request?
-        </div>
-        <div class="confirm-footer">
-          <button class="popup-button secondary" type="button" @click="cancelFileDelete">
-            Cancel
-          </button>
-          <button class="popup-button yes-button" type="button" @click="confirmFileDelete">
-            Remove
-          </button>
-        </div>
-      </div>
-    </div>
+    <ConfirmationPopup
+      :show="showToggleConfirm"
+      title="Switch record type?"
+      :description="`Switching between Library and Sample will clear all ${switchClearLabel} you have added. Do you want to continue?`"
+      yesButtonText="OK"
+      @yes="confirmToggleSwitch"
+      @no="cancelToggleSwitch"
+      @close="cancelToggleSwitch"
+    />
+
+    <ConfirmationPopup
+      :show="showDeleteConfirm"
+      :title="deleteConfirmTitle"
+      :description="`This will permanently remove ${selectedDraftRowIds.length} ${deleteConfirmNoun}. Do you want to continue?`"
+      yesButtonText="OK"
+      @yes="confirmDeleteSelectedRows"
+      @no="cancelDeleteSelectedRows"
+      @close="cancelDeleteSelectedRows"
+    />
+
+    <ConfirmationPopup
+      :show="showCloseConfirm"
+      title="Discard new request?"
+      description="Closing now will discard your entered data. Do you want to continue?"
+      yesButtonText="OK"
+      @yes="confirmCloseModal"
+      @no="cancelCloseModal"
+      @close="cancelCloseModal"
+    />
+
+    <ConfirmationPopup
+      :show="showFileDeleteConfirm"
+      title="Delete file?"
+      :description="`Are you sure you want to remove '${pendingFileDelete?.name}' from this request?`"
+      yesButtonText="Remove"
+      @yes="confirmFileDelete"
+      @no="cancelFileDelete"
+      @close="cancelFileDelete"
+    />
   </div>
 </template>
 
 <script>
 import TabulatorTable from "../components/TabulatorTable.vue";
+import RequestEditorForm from "../components/RequestEditorForm.vue";
+import RequestEditorFiles from "../components/RequestEditorFiles.vue";
+import ConfirmationPopup from "../components/ConfirmationPopup.vue";
 import {
   applyValueToAllRows,
   showNotification,
@@ -355,7 +350,10 @@ const urlStringStart = urlStringStartsWith();
 export default {
   name: "RequestEditorView",
   components: {
-    TabulatorTable
+    TabulatorTable,
+    RequestEditorForm,
+    RequestEditorFiles,
+    ConfirmationPopup
   },
   props: {
     show: {
@@ -491,7 +489,7 @@ export default {
       isSingleCellSelected: false,
       rangeListenersAttached: false,
       rangeSelectionHandler: null,
-      rangeSelectionElement: null,
+      rangeSelectionElement: null
     };
   },
   watch: {
@@ -602,7 +600,9 @@ export default {
         : { singular: "sample", plural: "samples" };
     },
     addButtonLabel() {
-      return this.requestEditorMode === "library" ? "Add Libraries" : "Add Samples";
+      return this.requestEditorMode === "library"
+        ? "Add Libraries"
+        : "Add Samples";
     },
     addButtonTitle() {
       return this.requestEditorMode === "library"
@@ -621,7 +621,9 @@ export default {
     },
     deleteConfirmNoun() {
       const count = this.selectedDraftRowIds.length;
-      return count === 1 ? this.recordLabelSet.singular : this.recordLabelSet.plural;
+      return count === 1
+        ? this.recordLabelSet.singular
+        : this.recordLabelSet.plural;
     },
     switchClearLabel() {
       return this.recordLabelSet.plural;
@@ -685,15 +687,15 @@ export default {
       const columns =
         this.requestEditorMode === "library"
           ? getRequestEditorLibraryColumns(
-            getInstance,
-            libraryEditors,
-            onSelectionChange
-          )
+              getInstance,
+              libraryEditors,
+              onSelectionChange
+            )
           : getRequestEditorSampleColumns(
-            getInstance,
-            sampleEditors,
-            onSelectionChange
-          );
+              getInstance,
+              sampleEditors,
+              onSelectionChange
+            );
 
       if (!this.canEditRequest) {
         return applyReadOnly(columns);
@@ -800,9 +802,7 @@ export default {
     findIndexOptionByValue(options = [], value) {
       if (value === "" || value === undefined || value === null) return null;
       const match = String(value);
-      return (
-        options.find((option) => String(option.value) === match) || null
-      );
+      return options.find((option) => String(option.value) === match) || null;
     },
     fieldHasValue(value) {
       if (value === null || value === undefined) return false;
@@ -831,9 +831,14 @@ export default {
       const table = this.$refs.requestEditorDraftTableRef?.tabulatorInstance;
       const list = Array.isArray(rows) ? rows : [];
       list.forEach((row) => {
-        const rowRef = row?.getData ? row : table?.getRow?.(row?.tempId) || null;
+        const rowRef = row?.getData
+          ? row
+          : table?.getRow?.(row?.tempId) || null;
         const rowData = rowRef?.getData ? rowRef.getData() : row;
-        if (!rowData?.index_type || (!rowData?.index_i7 && !rowData?.index_i5)) {
+        if (
+          !rowData?.index_type ||
+          (!rowData?.index_i7 && !rowData?.index_i5)
+        ) {
           return;
         }
         const typeKey = String(rowData.index_type);
@@ -966,32 +971,21 @@ export default {
     cancelCloseModal() {
       this.showCloseConfirm = false;
     },
-    handleCloseConfirmKeydown(event) {
-      if (!this.showCloseConfirm) return;
-      if (event.key === "Escape") {
-        event.preventDefault();
-        this.cancelCloseModal();
-        return;
-      }
-      if (event.key === "Enter") {
-        event.preventDefault();
-        this.confirmCloseModal();
-      }
-    },
     hasUnsavedChanges() {
       const costUnitRaw = this.newRequest.cost_unit || "";
       const description = (this.newRequest.description || "").trim();
       if (this.isEditMode) {
-        const hasDirtyTableEdits = Object.values(this.dirtyFieldsByRowId || {}).some(
-          (fields) => fields instanceof Set ? fields.size > 0 : Boolean(fields)
+        const hasDirtyTableEdits = Object.values(
+          this.dirtyFieldsByRowId || {}
+        ).some((fields) =>
+          fields instanceof Set ? fields.size > 0 : Boolean(fields)
         );
         if (hasDirtyTableEdits) {
           return true;
         }
         const snapshot = this.editSnapshot || {};
         const baseCostUnitRaw = snapshot.cost_unit || "";
-        const costUnit =
-          costUnitRaw === "" ? "" : String(costUnitRaw);
+        const costUnit = costUnitRaw === "" ? "" : String(costUnitRaw);
         const baseCostUnit =
           baseCostUnitRaw === "" ? "" : String(baseCostUnitRaw);
         const baseDescription = (snapshot.description || "").trim();
@@ -1007,7 +1001,10 @@ export default {
         );
       }
       if (costUnitRaw || description) return true;
-      if (this.uploadedRequestFiles.length || this.uploadedRequestFileIds.length)
+      if (
+        this.uploadedRequestFiles.length ||
+        this.uploadedRequestFileIds.length
+      )
         return true;
       return this.getDraftTableRows().length > 0;
     },
@@ -1137,9 +1134,6 @@ export default {
       this.addRowCount = this.isEditMode ? 0 : 1;
       this.hasRangeSelection = false;
       this.unbindRangeSelectionListeners();
-      if (this.$refs.requestFileInput) {
-        this.$refs.requestFileInput.value = "";
-      }
       this.$nextTick(() => this.applyValidationStyling());
     },
     resetDirtyTracking() {
@@ -1157,22 +1151,6 @@ export default {
     },
     resumeDirtyTracking() {
       this.allowDirtyTracking = true;
-    },
-    handleKeyDown(event) {
-      if (!this.show) return;
-      const key = event.key?.toLowerCase?.();
-      const isCtrl = event.ctrlKey || event.metaKey;
-      if (!isCtrl || key !== "x") return;
-      const target = event.target;
-      const isInput =
-        target &&
-        (target.tagName === "INPUT" ||
-          target.tagName === "TEXTAREA" ||
-          target.isContentEditable);
-      if (isInput) return;
-      if (!this.hasEditableRangeSelection || !this.canEditRequest) return;
-      event.preventDefault();
-      this.triggerTableCut();
     },
     async prepareRequestEditorModal() {
       if (this.isPreparingModal) return;
@@ -1199,9 +1177,7 @@ export default {
           !metaFiles.length ||
           metaFiles.some(
             (file) =>
-              !file?.path ||
-              file?.size === undefined ||
-              file?.size === null
+              !file?.path || file?.size === undefined || file?.size === null
           );
         const fetchFiles = needsFileDetails;
 
@@ -1211,8 +1187,8 @@ export default {
             : Promise.resolve({ data: meta }),
           fetchFiles
             ? axiosRef.get(
-              `${urlStringStart}/api/requests/${this.requestId}/get_files/`
-            )
+                `${urlStringStart}/api/requests/${this.requestId}/get_files/`
+              )
             : Promise.resolve({ data: meta?.files || [] }),
           axiosRef.get(`${urlStringStart}/api/libraries/`, {
             params: { request_id: this.requestId }
@@ -1258,19 +1234,20 @@ export default {
           library: libraries.length > 0,
           sample: samples.length > 0
         };
-        const initialMode =
-          this.editRecordTypesAvailable.library
-            ? "library"
-            : this.editRecordTypesAvailable.sample
-              ? "sample"
-              : "library";
+        const initialMode = this.editRecordTypesAvailable.library
+          ? "library"
+          : this.editRecordTypesAvailable.sample
+          ? "sample"
+          : "library";
         this.requestEditorMode = initialMode;
         this.loadEditRecordsForMode(initialMode);
         const indexTypes = [
           ...new Set(
             libraries
               .map((record) => record?.index_type)
-              .filter((value) => value !== null && value !== undefined && value !== "")
+              .filter(
+                (value) => value !== null && value !== undefined && value !== ""
+              )
               .map((value) => String(value))
           )
         ];
@@ -1398,10 +1375,6 @@ export default {
         this.editRecordsByType.sample = rows;
       }
     },
-    triggerRequestFileUpload() {
-      if (!this.canEditRequest) return;
-      this.$refs.requestFileInput?.click?.();
-    },
     triggerApplyToAll() {
       const table = this.$refs.requestEditorDraftTableRef?.tabulatorInstance;
       const cell = table?.getRanges?.()?.[0]?.getCells?.()?.[0]?.[0];
@@ -1411,7 +1384,10 @@ export default {
     triggerTableCopy() {
       const table = this.$refs.requestEditorDraftTableRef?.tabulatorInstance;
       const element = document.activeElement;
-      if (element && (element.tagName === "INPUT" || element.tagName === "TEXTAREA")) {
+      if (
+        element &&
+        (element.tagName === "INPUT" || element.tagName === "TEXTAREA")
+      ) {
         element.blur();
       }
       table?.copyToClipboard?.();
@@ -1424,7 +1400,10 @@ export default {
     triggerTablePaste() {
       const tableComponent = this.$refs.requestEditorDraftTableRef;
       const element = document.activeElement;
-      if (element && (element.tagName === "INPUT" || element.tagName === "TEXTAREA")) {
+      if (
+        element &&
+        (element.tagName === "INPUT" || element.tagName === "TEXTAREA")
+      ) {
         element.blur();
       }
       tableComponent?.triggerClipboardPaste?.();
@@ -1432,10 +1411,16 @@ export default {
     triggerTableClear() {
       const table = this.$refs.requestEditorDraftTableRef?.tabulatorInstance;
       const element = document.activeElement;
-      if (element && (element.tagName === "INPUT" || element.tagName === "TEXTAREA")) {
+      if (
+        element &&
+        (element.tagName === "INPUT" || element.tagName === "TEXTAREA")
+      ) {
         element.blur();
       }
-      const keyEvent = new KeyboardEvent("keydown", { key: "Delete", bubbles: true });
+      const keyEvent = new KeyboardEvent("keydown", {
+        key: "Delete",
+        bubbles: true
+      });
       table?.element?.dispatchEvent?.(keyEvent);
     },
     updateRangeSelectionState() {
@@ -1499,7 +1484,11 @@ export default {
       this.rangeListenersAttached = true;
     },
     unbindRangeSelectionListeners() {
-      if (!this.rangeListenersAttached || !this.rangeSelectionElement || !this.rangeSelectionHandler) {
+      if (
+        !this.rangeListenersAttached ||
+        !this.rangeSelectionElement ||
+        !this.rangeSelectionHandler
+      ) {
         this.rangeListenersAttached = false;
         return;
       }
@@ -1527,10 +1516,15 @@ export default {
           name: ""
         };
         const row =
-          this.requestEditorMode === "sample" ? { ...baseRow, gmo: null } : baseRow;
+          this.requestEditorMode === "sample"
+            ? { ...baseRow, gmo: null }
+            : baseRow;
         newRows.push(row);
       }
-      this.requestEditorDraftRows = [...this.requestEditorDraftRows, ...newRows];
+      this.requestEditorDraftRows = [
+        ...this.requestEditorDraftRows,
+        ...newRows
+      ];
       this.$nextTick(() => this.revalidateDraftRows());
       if (total > 5) {
         this.addRowCount = 0;
@@ -1547,18 +1541,6 @@ export default {
     },
     cancelDeleteSelectedRows() {
       this.showDeleteConfirm = false;
-    },
-    handleDeleteConfirmKeydown(event) {
-      if (!this.showDeleteConfirm) return;
-      if (event.key === "Escape") {
-        event.preventDefault();
-        this.cancelDeleteSelectedRows();
-        return;
-      }
-      if (event.key === "Enter") {
-        event.preventDefault();
-        this.confirmDeleteSelectedRows();
-      }
     },
     deleteSelectedDraftRows() {
       if (!this.selectedDraftRowIds.length) return;
@@ -1586,7 +1568,8 @@ export default {
         this.validDraftCount = 0;
         this.draftRowCounter = 0;
         this.$nextTick(() => {
-          const table = this.$refs.requestEditorDraftTableRef?.tabulatorInstance;
+          const table =
+            this.$refs.requestEditorDraftTableRef?.tabulatorInstance;
           table?.clearData?.();
           this.applyValidationStyling();
         });
@@ -1642,18 +1625,6 @@ export default {
       this.pendingToggleMode = null;
       this.showToggleConfirm = false;
     },
-    handleConfirmKeydown(event) {
-      if (!this.showToggleConfirm) return;
-      if (event.key === "Escape") {
-        event.preventDefault();
-        this.cancelToggleSwitch();
-        return;
-      }
-      if (event.key === "Enter") {
-        event.preventDefault();
-        this.confirmToggleSwitch();
-      }
-    },
     formatFileSize(size) {
       if (size === undefined || size === null) return "-";
       const value = Number(size);
@@ -1679,7 +1650,11 @@ export default {
       this.selectedDraftRowIds = ids;
     },
     handleDraftBatchChanges(batchChanges = []) {
-      if (!this.isEditMode || !this.allowDirtyTracking || !Array.isArray(batchChanges)) {
+      if (
+        !this.isEditMode ||
+        !this.allowDirtyTracking ||
+        !Array.isArray(batchChanges)
+      ) {
         return;
       }
       if (this.suppressNextDirtyBatch) {
@@ -1688,9 +1663,7 @@ export default {
       }
       const tableRows = this.getDraftTableRows() || [];
       const rowByPk = new Map(
-        tableRows
-          .filter((row) => row?.pk)
-          .map((row) => [String(row.pk), row])
+        tableRows.filter((row) => row?.pk).map((row) => [String(row.pk), row])
       );
       let hasDirtyUpdates = false;
       batchChanges.forEach((change) => {
@@ -1860,7 +1833,9 @@ export default {
       const isExistingRow = this.isEditMode && rowData?.pk;
       const dirtyFields = rowId ? this.dirtyFieldsByRowId[rowId] : null;
       const hasDirtyFields =
-        dirtyFields instanceof Set ? dirtyFields.size > 0 : Boolean(dirtyFields);
+        dirtyFields instanceof Set
+          ? dirtyFields.size > 0
+          : Boolean(dirtyFields);
       const hasScope =
         this.isEditMode &&
         rowId &&
@@ -1916,7 +1891,9 @@ export default {
       const isExistingRow = this.isEditMode && rowData?.pk;
       const dirtyFields = rowId ? this.dirtyFieldsByRowId[rowId] : null;
       const hasDirtyFields =
-        dirtyFields instanceof Set ? dirtyFields.size > 0 : Boolean(dirtyFields);
+        dirtyFields instanceof Set
+          ? dirtyFields.size > 0
+          : Boolean(dirtyFields);
       const rowErrors = (rowId && this.draftValidationState[rowId]) || {};
       const hasErrors =
         !(isExistingRow && !hasDirtyFields) &&
@@ -1997,10 +1974,7 @@ export default {
         field === "gmo" &&
         !this.isGmoAllowedInputType(rowData.nucleic_acid_type)
       ) {
-        showNotification(
-          "GMO only editable for Cell Suspension.",
-          "warning"
-        );
+        showNotification("GMO only editable for Cell Suspension.", "warning");
         return false;
       }
       return true;
@@ -2028,8 +2002,6 @@ export default {
         this.handleSampleCellEdited(field, row);
       }
       this.revalidateDraftRows();
-      const rowData = row.getData?.() || {};
-      const rowErrors = this.draftValidationState[rowData.tempId] || {};
       this.applyRowStyling(row);
     },
     handleLibraryCellEdited(field, row) {
@@ -2175,14 +2147,22 @@ export default {
           }));
         };
         const i7Options = formatOptions(i7Res).sort((a, b) =>
-          String(a.label || "").localeCompare(String(b.label || ""), undefined, {
-            sensitivity: "base"
-          })
+          String(a.label || "").localeCompare(
+            String(b.label || ""),
+            undefined,
+            {
+              sensitivity: "base"
+            }
+          )
         );
         const i5Options = formatOptions(i5Res).sort((a, b) =>
-          String(a.label || "").localeCompare(String(b.label || ""), undefined, {
-            sensitivity: "base"
-          })
+          String(a.label || "").localeCompare(
+            String(b.label || ""),
+            undefined,
+            {
+              sensitivity: "base"
+            }
+          )
         );
         const pairsList = pairsRes?.data?.data || pairsRes?.data || [];
         const pairsMap = {};
@@ -2517,18 +2497,6 @@ export default {
         gmo: gmoValue
       };
     },
-    async handleRequestFileUpload(event) {
-      const files = Array.from(event.target.files || []);
-      try {
-        await this.uploadRequestFiles(files);
-      } catch (error) {
-        handleError(error);
-      } finally {
-        if (event?.target) {
-          event.target.value = "";
-        }
-      }
-    },
     async fetchUploadedFilesDetails() {
       if (!this.uploadedRequestFileIds.length) {
         this.uploadedRequestFiles = [];
@@ -2668,7 +2636,10 @@ export default {
         );
         if (response?.data?.success) {
           const ids = response.data.fileIds || [];
-          this.uploadedRequestFileIds = [...this.uploadedRequestFileIds, ...ids];
+          this.uploadedRequestFileIds = [
+            ...this.uploadedRequestFileIds,
+            ...ids
+          ];
           await this.fetchUploadedFilesDetails();
           showNotification("Files uploaded successfully.", "success");
         } else {
@@ -2693,13 +2664,20 @@ export default {
         const params = {
           user_id: targetUserId
         };
-        const response = await axiosRef.get(`${urlStringStart}/api/cost_units/`, {
-          params
-        });
+        const response = await axiosRef.get(
+          `${urlStringStart}/api/cost_units/`,
+          {
+            params
+          }
+        );
         this.costUnits = (response.data || []).sort((a, b) =>
-          String(a.name || "").localeCompare(String(b.name || ""), undefined, {
-            sensitivity: "base"
-          })
+          String(a.name || "").localeCompare(
+            String(b.name || ""),
+            undefined,
+            {
+              sensitivity: "base"
+            }
+          )
         );
         if (!this.isEditMode) {
           this.costUnitsLoadedForUser = targetUserId;
@@ -2730,7 +2708,8 @@ export default {
         };
       });
 
-      const currentMode = this.requestEditorMode === "sample" ? "sample" : "library";
+      const currentMode =
+        this.requestEditorMode === "sample" ? "sample" : "library";
       const currentResult = results[currentMode];
       if (currentResult) {
         this.draftValidationState = currentResult.validations;
@@ -2828,9 +2807,13 @@ export default {
             }));
             const formData = new FormData();
             formData.append("data", JSON.stringify(payloads));
-            await axiosRef.post(`${urlStringStart}/api/${endpoint}/edit/`, formData, {
-              headers: { "Content-Type": "multipart/form-data" }
-            });
+            await axiosRef.post(
+              `${urlStringStart}/api/${endpoint}/edit/`,
+              formData,
+              {
+                headers: { "Content-Type": "multipart/form-data" }
+              }
+            );
           }
 
           if (newRows.length) {
@@ -2839,12 +2822,17 @@ export default {
                 ? this.buildSamplePayload(row)
                 : this.buildLibraryPayload(row)
             );
-            const created = await this.submitRequestEditor(endpoint, payloads);
+            const created = await this.submitRequestEditor(
+              endpoint,
+              payloads
+            );
             created.forEach((record, index) => {
               const row = newRows[index];
               if (row) {
                 row.pk = record.pk;
-                row.record_type = record.record_type || (mode === "sample" ? "Sample" : "Library");
+                row.record_type =
+                  record.record_type ||
+                  (mode === "sample" ? "Sample" : "Library");
                 row.barcode = record.barcode;
               }
             });
@@ -2929,7 +2917,10 @@ export default {
         return;
       }
       if (this.validDraftCount !== rowCount) {
-        showNotification("Resolve all validation errors before saving.", "warning");
+        showNotification(
+          "Resolve all validation errors before saving.",
+          "warning"
+        );
         return;
       }
       const drafts = this.getDraftTableRows();
@@ -3044,7 +3035,8 @@ export default {
           `${urlStringStart}/api/read_lengths/`
         );
         this.readLengthsList = readLengthsRes.data.sort((a, b) => {
-          const getVal = (str) => str.match(/\d+/g)?.map(Number)[1] ?? Infinity;
+          const getVal = (str) =>
+            str.match(/\d+/g)?.map(Number)[1] ?? Infinity;
           return getVal(a.name) - getVal(b.name);
         });
         const analysisRes = await axiosRef.get(
@@ -3202,77 +3194,6 @@ export default {
   align-items: center;
   justify-content: center;
   z-index: 1001;
-}
-
-.confirm-modal {
-  background: #ffffff;
-  border-radius: 8px;
-  width: 460px;
-  max-width: calc(100% - 40px);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.confirm-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  border-bottom: 1px solid #0b5f5a;
-  background: #006c64;
-}
-
-.confirm-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #ffffff;
-}
-
-.confirm-body {
-  padding: 16px;
-  font-size: 13px;
-  color: #333;
-  line-height: 1.5;
-}
-
-.confirm-footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 12px 16px 16px;
-}
-
-.confirm-modal .popup-close-button {
-  color: #ffffff;
-}
-
-.confirm-modal .popup-close-button:hover {
-  color: #cfe9e6;
-}
-
-.confirm-modal .popup-button {
-  background: #006c64;
-  border: 1px solid #0b5f5a;
-  color: #ffffff;
-  border-radius: 6px;
-  padding: 6px 16px;
-  font-weight: 600;
-}
-
-.confirm-modal .popup-button:hover {
-  background: #0a5d56;
-}
-
-.confirm-modal .popup-button:not(.yes-button) {
-  background: #ffffff;
-  color: #006c64;
-}
-
-.confirm-modal .popup-button:not(.yes-button):hover {
-  background: #e8f2f1;
 }
 
 .request-editor-content {
@@ -3487,20 +3408,6 @@ export default {
   flex-direction: column;
 }
 
-.request-form-panel {
-  width: 320px;
-  min-width: 290px;
-  border-right: 1px solid #e5e7eb;
-  padding-right: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  height: 100%;
-  transition: width 0.25s ease, padding 0.25s ease, opacity 0.25s ease;
-}
-
 .request-panel-container {
   display: flex;
   align-items: stretch;
@@ -3510,251 +3417,6 @@ export default {
 
 .request-panel-container.collapsed {
   border-right: none;
-}
-
-.request-form-panel.collapsed {
-  width: 0;
-  min-width: 0;
-  padding-right: 0;
-  opacity: 0;
-  pointer-events: none;
-  border-right: none;
-}
-
-.field-block {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 13px;
-  color: #333;
-}
-
-.field-block select {
-  padding: 11px 8px;
-  border: 1px solid #d0d0d0;
-  border-radius: 8px;
-  font-size: 14px;
-  font-family: inherit;
-  color: #232323;
-  background: #f4f6f8;
-  line-height: 1.5;
-  box-sizing: border-box;
-}
-
-.field-block textarea {
-  padding: 11px 12px;
-  border: 1px solid #d0d0d0;
-  border-radius: 8px;
-  font-size: 14px;
-  font-family: inherit;
-  color: #232323;
-  background: #f4f6f8;
-  line-height: 1.5;
-  box-sizing: border-box;
-}
-
-.field-block select.placeholder {
-  color: #9ba3af;
-}
-
-.field-block select.placeholder option {
-  color: #232323;
-}
-
-.description-textarea {
-  width: 100%;
-  min-height: 200px;
-  resize: none;
-  line-height: 1.5;
-}
-
-.description-textarea::placeholder {
-  color: #9ba3af;
-}
-
-.input-error {
-  border-color: #d14343 !important;
-}
-
-.field-error {
-  margin-top: 4px;
-  font-size: 12px;
-  color: #b42318;
-}
-
-.required {
-  color: #b42318;
-  margin-left: 1px;
-}
-
-.files-section {
-  border: 1px solid #d0d0d0;
-  background: #f6f8fa;
-  border-radius: 8px;
-  padding: 12px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: clamp(280px, 45vh, 420px);
-}
-
-.files-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.files-header small {
-  display: block;
-  font-size: 11px;
-  color: #6b7280;
-}
-
-.files-table-wrapper {
-  width: 100%;
-  border: 1px solid #d0d0d0;
-  border-radius: 8px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  margin-top: 8px;
-  flex: 1;
-  min-height: 120px;
-  display: flex;
-  flex-direction: column;
-  background: white;
-}
-
-.files-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  table-layout: fixed;
-  font-size: 12px;
-}
-
-.files-table.files-table-empty {
-  height: 100%;
-}
-
-.files-table th,
-.files-table td {
-  padding: 8px 12px;
-  text-align: left;
-  vertical-align: middle;
-  line-height: 1.4;
-}
-
-.files-table th {
-  border-bottom: 1px solid #d0d0d0;
-}
-
-.files-table .empty-cell {
-  text-align: center;
-  color: #7b7f89;
-}
-
-.files-table td.actions-cell {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 3px;
-}
-
-.files-table td.actions-cell button+button {
-  margin-left: 4px;
-}
-
-.file-name-cell {
-  max-width: 220px;
-  display: flex;
-  align-items: center;
-}
-
-.file-name-text {
-  display: inline-block;
-  max-width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.file-size-cell {
-  max-width: 140px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.icon-action {
-  border: none;
-  background: #e6eaef;
-  color: #13415b;
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.icon-action:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.icon-action.danger {
-  background: #f3d6d6;
-  color: #a3272b;
-}
-
-
-
-.download-buttons {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px;
-  border: 1px solid #d0d0d0;
-  border-radius: 6px;
-  background: #f6f8fa;
-  width: 100%;
-  min-width: 0;
-}
-
-.download-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border: 1px solid #0f5c84;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #0f5c84;
-  font-size: 11px;
-  font-weight: 600;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-  flex: 1 1 0;
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
-}
-
-.download-button:hover {
-  background: #e8f2f7;
-  border-color: #0a4a6a;
-  color: #0a4a6a;
-}
-
-.download-button span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 100%;
 }
 
 .records-panel {
@@ -3794,80 +3456,6 @@ export default {
   z-index: 3;
 }
 
-
-.request-form-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-
-.controls-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px;
-  border: 1px solid #d0d0d0;
-  border-radius: 6px;
-  background: #f6f8fa;
-}
-
-.record-type-switch {
-  position: relative;
-  width: 100%;
-  height: 36px;
-  border-radius: 8px;
-  background: #e1e6ea;
-  border: 1px solid #d0d0d0;
-  cursor: pointer;
-  padding: 0;
-}
-
-.record-type-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.record-type-switch .slider {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  font-weight: 600;
-  color: #4b5563;
-}
-
-.record-type-switch .slider::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 50%;
-  height: 100%;
-  border-radius: 8px;
-  background: #0f766e;
-  transition: transform 0.25s ease;
-  z-index: 0;
-}
-
-.record-type-switch input:checked+.slider::before {
-  transform: translateX(100%);
-}
-
-.record-type-switch .option {
-  flex: 1 1 50%;
-  text-align: center;
-  z-index: 1;
-  transition: color 0.2s ease;
-}
-
-.record-type-switch .option.active {
-  color: white;
-}
-
 .icon-button {
   width: 34px;
   height: 34px;
@@ -3899,12 +3487,6 @@ export default {
   min-height: 260px;
 }
 
-.controls-group.view-only {
-  background: #f6f8fa;
-  color: #4b5563;
-  font-weight: 600;
-}
-
 .request-editor-footer {
   grid-column: 1 / -1;
   grid-row: 3;
@@ -3934,10 +3516,6 @@ export default {
   cursor: not-allowed;
 }
 
-.header-button.ghost {
-  background: #0f766e;
-}
-
 @keyframes request-editor-fade-in {
   from {
     opacity: 0;
@@ -3960,12 +3538,3 @@ export default {
   }
 }
 </style>
-<!--
-refactor/simplify all the files
-unit test all the pages
-
-attachments shall be easier accessible. An attachment button shall show all attachments already uploaded and allow fast adding of them. Even more wonderful would be if the icon changes color if an attachment is there. This would help us in a way that we would spot immediately if user add attachments when creating the requests, instead of clicking multiple times.
-compose email for users
-question: i5 i7 Other Option, what to do if the index doest exist in any lists
-test: name size in files appear different in Ulrike's computer (for empty table)
--->

@@ -1,7 +1,8 @@
 import {
   applyContextMenuToColumns,
   cellContextMenu,
-  ellipsisContainer
+  ellipsisContainer,
+  createColumn,
 } from "../utilities/utilityFunctions";
 import { statusMap, getStatusClass } from "./statusConsts";
 import iconEdit from "../assets/icons/action_edit.svg";
@@ -13,7 +14,7 @@ import iconSelectAll from "../assets/icons/action_select_all.svg";
 import iconDeselectAll from "../assets/icons/action_deselect_all.svg";
 
 const sortedStatusEntries = Object.entries(statusMap).sort(
-  ([keyA], [keyB]) => Number(keyA) - Number(keyB)
+  ([keyA], [keyB]) => Number(keyA) - Number(keyB),
 );
 
 function updateInputDropdownTooltipState(isOpen) {
@@ -42,10 +43,10 @@ function createInputColumnHeader(cellComponent, options = {}) {
   if (select) {
     select.value = mode;
     select.addEventListener("focus", () =>
-      updateInputDropdownTooltipState(true)
+      updateInputDropdownTooltipState(true),
     );
     select.addEventListener("blur", () =>
-      updateInputDropdownTooltipState(false)
+      updateInputDropdownTooltipState(false),
     );
     select.addEventListener("change", (event) => {
       const newMode = event.target.value;
@@ -65,7 +66,7 @@ function createStatusHeaderTooltip() {
       <div style="display: flex; gap: 6px; align-items: center;">
         <span style="font-weight: 600; min-width: 20px; text-align: right;">${key}</span>
         <span>${label}</span>
-      </div>`
+      </div>`,
     )
     .join("");
 
@@ -84,7 +85,7 @@ export function librariesAndSamplesGroupHeader(
   value,
   count,
   totalDepth,
-  options = {}
+  options = {},
 ) {
   const {
     showStaffActions = false,
@@ -146,7 +147,7 @@ export function librariesAndSamplesGroupHeader(
       ${deleteAction}
       ${approvalAction}
       ${staffActions}
-      ${showStaffActions ? '<span class="group-action-separator"></span>' : ''}
+      ${showStaffActions ? '<span class="group-action-separator"></span>' : ""}
       <div title="Select All" class="group-action-button" onclick="handleGroupButtonClick(event, '${value}', 'selectAll')">
         <img class="group-action-icon-img icon-24" src="${iconSelectAll}" alt="Select All" />
       </div>
@@ -160,7 +161,7 @@ export function librariesAndSamplesGroupHeader(
 
 export function librariesAndSamplesColumnDefs(
   getTabulatorInstance,
-  columnOptions = {}
+  columnOptions = {},
 ) {
   const { inputColumnMode = "mode_user", onInputColumnModeChange = () => {} } =
     columnOptions;
@@ -174,7 +175,7 @@ export function librariesAndSamplesColumnDefs(
       resizable: false,
       formatter: (cell) => {
         const rowData = cell.getRow().getData();
-        const checkbox = `
+        return `
               <input
                 type="checkbox"
                 title="Select"
@@ -182,7 +183,6 @@ export function librariesAndSamplesColumnDefs(
                 ${rowData.selected ? "checked" : ""}
               />
             `;
-        return checkbox;
       },
       hozAlign: "center",
       width: 30,
@@ -190,43 +190,33 @@ export function librariesAndSamplesColumnDefs(
       cssClass: "checkbox-column right-border",
       contextMenu: () =>
         cellContextMenu(false, false, false, getTabulatorInstance),
-      cellClick: function (e, cell) {
+      cellClick: (e, cell) => {
         const row = cell.getRow();
         const rowData = row.getData();
         const checkbox = e.target;
         if (checkbox && checkbox.type === "checkbox") {
           rowData.selected = checkbox.checked;
         }
-      }
+      },
     },
-    {
-      title: "Name",
-      field: "name",
+    createColumn("name", "Name", {
       minWidth: 140,
-      headerFilter: true,
-      headerTooltip: "Name",
-      visible: true,
       frozen: true,
       cssClass: "right-border",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
       formatter: (cell) => {
-        const request_name = cell.getRow().getData().request_name;
         const name = cell.getValue();
         return `
-                        <div style="padding: 4px 12px; display: flex; align-items: center;">
-                          <span title="${name}" style="padding: 8px 0px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">${name}</span>
-                        </div>
-                      `;
-      }
-    },
-    {
-      title: "Status",
-      field: "status",
+          <div style="padding: 4px 12px; display: flex; align-items: center;">
+            <span title="${name}" style="padding: 8px 0px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">${name}</span>
+          </div>
+        `;
+      },
+    }),
+    createColumn("status", "Status", {
       width: 50,
-      headerFilter: true,
       headerTooltip: () => createStatusHeaderTooltip(),
-      visible: true,
       frozen: true,
       cssClass: "right-border",
       contextMenu: () =>
@@ -236,171 +226,100 @@ export function librariesAndSamplesColumnDefs(
         const tooltip = statusMap[value];
         const statusClass = `status ${getStatusClass(value)}`;
         return `<div class="${statusClass}" title="${tooltip}"></div>`;
-      }
-    },
-    {
-      title: "S/L",
-      field: "type",
+      },
+    }),
+    createColumn("type", "S/L", {
       width: 45,
       minWidth: 45,
-      headerFilter: true,
       headerTooltip: "Type",
-      visible: true,
       frozen: true,
       cssClass: "right-border",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const value = cell.getValue();
-        const finalString = value || "-";
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "Plate Coord",
-      field: "well_position",
+    }),
+    createColumn("well_position", "Plate Coord", {
       width: 80,
       minWidth: 60,
-      headerFilter: true,
       headerTooltip: "Coordinate of Sample in 96-well Plate",
-      visible: true,
       frozen: true,
       cssClass: "right-border",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const value = cell.getValue();
-        const finalString = value || "-";
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "Barcode",
-      field: "barcode",
+    }),
+    createColumn("barcode", "Barcode", {
       width: 96,
       minWidth: 96,
-      headerFilter: true,
       headerTooltip: "Barcode",
-      visible: true,
       frozen: true,
       cssClass: "right-border",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
       formatter: (cell) => {
-        const rowData = cell.getRow().getData();
+        const { record_type } = cell.getRow().getData();
         const value = cell.getValue();
         const barcode = value || "-";
         const barcodeSuffix = value?.[2] ?? "";
         const finalString =
-          rowData.record_type === "Sample" && barcodeSuffix === "L"
+          record_type === "Sample" && barcodeSuffix === "L"
             ? barcode + "*"
             : barcode;
         return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "Pool Paths",
-      field: "pool_names",
+      },
+    }),
+    createColumn("pool_names", "Pool Paths", {
       width: 85,
       minWidth: 60,
-      headerFilter: true,
       headerTooltip: "Pool Paths",
-      visible: true,
       cssClass: "regular-column",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const value = cell.getValue();
-        const finalString = value || "-";
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "Propagable & GMO",
-      field: "gmo",
+    }),
+    createColumn("gmo", "Propagable & GMO", {
       width: 120,
       minWidth: 60,
-      headerFilter: true,
       headerTooltip: "Genetically Modified Organism",
-      visible: true,
       cssClass: "regular-column",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const value = cell.getValue();
-        const finalString = value || "-";
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "Date",
-      field: "create_time",
+    }),
+    createColumn("create_time", "Date", {
       width: 90,
       minWidth: 60,
-      headerFilter: true,
       headerTooltip: "Date",
-      visible: true,
       cssClass: "regular-column",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const value = cell.getValue();
-        const finalString = value || "-";
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "Input Type",
-      field: "nucleic_acid_type_name",
+    }),
+    createColumn("nucleic_acid_type_name", "Input Type", {
       minWidth: 80,
       width: "5%",
       headerVertical: false,
-      headerFilter: true,
       headerTooltip: "Input Type",
-      visible: true,
       cssClass: "regular-column",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const value = cell.getValue();
-        const finalString = value || "No Input Type";
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "Protocol",
-      field: "library_protocol_name",
+      formatter: (cell) =>
+        ellipsisContainer(cell.getValue() || "No Input Type"),
+    }),
+    createColumn("library_protocol_name", "Protocol", {
       minWidth: 80,
       width: "5%",
-      visible: true,
-      headerFilter: true,
-      cssClass: "regular-column",
       headerTooltip: "Library Preparation Protocol",
+      cssClass: "regular-column",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const value = cell.getValue();
-        const finalString = value || "No Protocol";
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "Analysis Type",
-      field: "analysis_type_name",
+      formatter: (cell) => ellipsisContainer(cell.getValue() || "No Protocol"),
+    }),
+    createColumn("analysis_type_name", "Analysis Type", {
       minWidth: 80,
       width: "5%",
-      visible: true,
-      headerFilter: true,
-      cssClass: "regular-column",
       headerTooltip: "Analysis Type",
+      cssClass: "regular-column",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const value = cell.getValue();
-        const finalString = value || "No Analysis Type";
-        return ellipsisContainer(finalString);
-      }
-    },
+      formatter: (cell) =>
+        ellipsisContainer(cell.getValue() || "No Analysis Type"),
+    }),
     {
       title: "Input",
       field: "input_display",
@@ -412,288 +331,170 @@ export function librariesAndSamplesColumnDefs(
         createInputColumnHeader(cell, formatterParams),
       titleFormatterParams: {
         inputColumnMode,
-        onInputColumnModeChange
+        onInputColumnModeChange,
       },
       visible: true,
       cssClass: "regular-column",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const value = cell.getValue();
-        const finalString = value || "-";
-        return ellipsisContainer(finalString);
-      }
+      formatter: (cell) => ellipsisContainer(cell.getValue() || "-"),
     },
-    {
-      title: "Starting Amount",
-      field: "starting_amount",
+    createColumn("starting_amount", "Starting Amount", {
       minWidth: 60,
       width: "3.5%",
       headerVertical: false,
       headerTooltip: "Starting Amount (ng or fmol)",
-      visible: true,
       cssClass: "regular-column",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
       formatter: (cell) => {
-        const rawValue = cell.getValue();
-        const value = Number(rawValue);
-        const finalString =
-          rawValue === "" || rawValue === undefined || isNaN(value)
-            ? "-"
-            : value === 0
-              ? "0.0"
-              : value.toFixed(1);
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "Cycles",
-      field: "pcr_cycles",
+        const val = Number(cell.getValue());
+        return ellipsisContainer(
+          isNaN(val) ? "-" : val === 0 ? "0.0" : val.toFixed(1),
+        );
+      },
+    }),
+    createColumn("pcr_cycles", "Cycles", {
       minWidth: 60,
       width: "3.5%",
       headerVertical: false,
       headerTooltip: "PCR Cycles",
-      visible: true,
       cssClass: "regular-column",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
       formatter: (cell) => {
-        const rawValue = cell.getValue();
-        const value = Number(rawValue);
-        let finalString;
-
-        if (rawValue === "" || rawValue === undefined || isNaN(value)) {
-          finalString = "-";
-        } else {
-          finalString = Math.round(value).toString();
-        }
-
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "ng/µl Library",
-      field: "concentration_library",
+        const val = Number(cell.getValue());
+        return ellipsisContainer(
+          isNaN(val) ? "-" : Math.round(val).toString(),
+        );
+      },
+    }),
+    createColumn("concentration_library", "ng/µl Library", {
       minWidth: 60,
       width: "3.5%",
       headerVertical: false,
       headerTooltip: "Concentration Library (ng/µl)",
-      visible: true,
       cssClass: "regular-column",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
       formatter: (cell) => {
-        const rawValue = cell.getValue();
-        const value = Number(rawValue);
-        const finalString =
-          rawValue === "" || rawValue === undefined || isNaN(value)
-            ? "-"
-            : value === 0
-              ? "0.0"
-              : value.toFixed(1);
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "bp",
-      field: "average_fragment_size",
+        const val = Number(cell.getValue());
+        return ellipsisContainer(
+          isNaN(val) ? "-" : val === 0 ? "0.0" : val.toFixed(1),
+        );
+      },
+    }),
+    createColumn("average_fragment_size", "bp", {
       minWidth: 60,
       width: "3.5%",
       headerVertical: false,
       headerTooltip: "Library Average Fragment Size",
-      visible: true,
       cssClass: "regular-column",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
       formatter: (cell) => {
-        const rawValue = cell.getValue();
-        const value = Number(rawValue);
-        let finalString;
-        if (rawValue === "" || rawValue === undefined || isNaN(value)) {
-          finalString = "-";
-        } else {
-          finalString = Math.round(value).toString();
-        }
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "Index Type",
-      field: "index_type_name",
+        const val = Number(cell.getValue());
+        return ellipsisContainer(
+          isNaN(val) ? "-" : Math.round(val).toString(),
+        );
+      },
+    }),
+    createColumn("index_type_name", "Index Type", {
       minWidth: 60,
       width: "4%",
       headerVertical: false,
-      headerFilter: true,
       headerTooltip: "Index Type",
-      visible: true,
       cssClass: "regular-column",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const finalString = cell.getValue() || "-";
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "Coord",
-      field: "coordinate",
+    }),
+    createColumn("coordinate", "Coord", {
       minWidth: 60,
       width: "3.5%",
       headerVertical: false,
-      headerFilter: true,
       headerTooltip: "Index Pair Coordinate",
-      visible: true,
       cssClass: "regular-column",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const finalString = cell.getValue() || "-";
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "I7 ID",
-      field: "i7_id",
+    }),
+    createColumn("i7_id", "I7 ID", {
       minWidth: 60,
       width: "3.5%",
       headerVertical: false,
-      headerFilter: true,
       headerTooltip: "Index I7 ID",
-      visible: true,
       cssClass: "regular-column",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const finalString = cell.getValue() || "-";
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "Index I7",
-      field: "index_i7",
+    }),
+    createColumn("index_i7", "Index I7", {
       minWidth: 60,
       width: "3.5%",
       headerVertical: false,
-      headerFilter: true,
       headerTooltip: "Index I7 ID",
-      visible: true,
       cssClass: "regular-column",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const finalString = cell.getValue() || "-";
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "I5 ID",
-      field: "i5_id",
+    }),
+    createColumn("i5_id", "I5 ID", {
       minWidth: 60,
       width: "3.5%",
       headerVertical: false,
-      headerFilter: true,
       headerTooltip: "Index I5 ID",
-      visible: true,
       cssClass: "regular-column",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const finalString = cell.getValue() || "-";
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "Index I5",
-      field: "index_i5",
+    }),
+    createColumn("index_i5", "Index I5", {
       minWidth: 60,
       width: "3.5%",
       headerVertical: false,
-      headerFilter: true,
       headerTooltip: "Index I5 ID",
-      visible: true,
       cssClass: "regular-column",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const finalString = cell.getValue() || "-";
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "Length",
-      field: "read_length_name",
+    }),
+    createColumn("read_length_name", "Length", {
       minWidth: 60,
       width: "3.5%",
       headerVertical: false,
-      headerFilter: true,
       headerTooltip: "Read Length",
-      visible: true,
       cssClass: "regular-column",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const finalString = cell.getValue() || "-";
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "Depth (M)",
-      field: "sequencing_depth",
+    }),
+    createColumn("sequencing_depth", "Depth (M)", {
       minWidth: 60,
       width: "3.5%",
       headerVertical: false,
       headerTooltip: "Sequencing Depth (M)",
-      visible: true,
       cssClass: "regular-column",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
       formatter: (cell) => {
-        const rawValue = cell.getValue();
-        const value = Number(rawValue);
-        let finalString;
-        if (rawValue === "" || rawValue === undefined || isNaN(value)) {
-          finalString = "-";
-        } else {
-          finalString = Math.round(value).toString();
-        }
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "Flowcell IDs",
-      field: "flowcell_ids",
+        const val = Number(cell.getValue());
+        return ellipsisContainer(
+          isNaN(val) ? "-" : Math.round(val).toString(),
+        );
+      },
+    }),
+    createColumn("flowcell_ids", "Flowcell IDs", {
       minWidth: 60,
       width: "5.5%",
       headerVertical: false,
-      headerFilter: true,
       headerTooltip: "Flowcell IDs",
-      visible: true,
       cssClass: "regular-column",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const finalString = cell.getValue() || "-";
-        return ellipsisContainer(finalString);
-      }
-    },
-    {
-      title: "Sequencers",
-      field: "sequencer_names",
+    }),
+    createColumn("sequencer_names", "Sequencers", {
       minWidth: 60,
       width: "5.5%",
       headerVertical: false,
-      headerFilter: true,
       headerTooltip: "Sequencer",
-      visible: true,
       cssClass: "regular-column",
       contextMenu: () =>
         cellContextMenu(true, false, false, getTabulatorInstance),
-      formatter: (cell) => {
-        const finalString = cell.getValue() || "-";
-        return ellipsisContainer(finalString);
-      }
-    }
+    }),
   ];
 
   return applyContextMenuToColumns(columns, getTabulatorInstance, {
@@ -734,6 +535,6 @@ export function librariesAndSamplesExportColumns() {
     { header: "Length", key: "read_length_name", width: 12 },
     { header: "Depth (M)", key: "sequencing_depth", width: 15 },
     { header: "Flowcell IDs", key: "flowcell_ids", width: 20 },
-    { header: "Sequencers", key: "sequencer_names", width: 20 }
+    { header: "Sequencers", key: "sequencer_names", width: 20 },
   ];
 }
