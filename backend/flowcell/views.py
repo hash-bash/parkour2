@@ -339,18 +339,22 @@ class FlowcellViewSet(MultiEditMixin, viewsets.ReadOnlyModelViewSet):
     def download_sample_sheet(self, request):
         """Generate Benchtop Protocol as XLS file for selected lanes."""
 
+        # Fetch I7/I5 Indices in bulk to avoid per-record queries
+        all_i7_indices = {
+            (idx.index, idx.index_type_id): idx.index_id
+            for idx in IndexI7.objects.filter(archived=False)
+        }
+        all_i5_indices = {
+            (idx.index, idx.index_type_id): idx.index_id
+            for idx in IndexI5.objects.filter(archived=False)
+        }
+
         def create_row(lane, record, monolane, legacy=False):
-            index_i7 = IndexI7.objects.filter(
-                archived=False, index=record.index_i7, index_type=record.index_type
-            )
-            index_i7_id = index_i7[0].index_id if index_i7 else ""
+            # Use cached indices
+            index_i7_id = all_i7_indices.get((record.index_i7, record.index_type_id), "")
+            index_i5_id = all_i5_indices.get((record.index_i5, record.index_type_id), "")
 
-            index_i5 = IndexI5.objects.filter(
-                archived=False, index=record.index_i5, index_type=record.index_type
-            )
-            index_i5_id = index_i5[0].index_id if index_i5 else ""
-
-            request_name = unicodedata.normalize("NFKD", record.request.get().name)
+            request_name = unicodedata.normalize("NFKD", record.request.all()[0].name)
             request_name = str(request_name.encode("ASCII", "ignore"), "utf-8")
 
             library_protocol = unicodedata.normalize(
@@ -435,7 +439,15 @@ class FlowcellViewSet(MultiEditMixin, viewsets.ReadOnlyModelViewSet):
 
         response["Content-Disposition"] = 'attachment; filename="%s"' % f_name
 
-        lanes = Lane.objects.filter(pk__in=ids).order_by("name")
+        # Optimize Lanes query
+        lanes = Lane.objects.filter(pk__in=ids).order_by("name").prefetch_related(
+            "pool__libraries__index_type",
+            "pool__libraries__request",
+            "pool__libraries__library_protocol",
+            "pool__samples__index_type",
+            "pool__samples__request",
+            "pool__samples__library_protocol",
+        )
 
         rows = []
         for lane in lanes:
@@ -589,7 +601,20 @@ class FlowcellAnalysisViewSet(viewsets.ViewSet):
         name, library type, library protocol type, organism).
         """
         flowcell_id = request.query_params.get("flowcell_id", "")
-        flowcell = get_object_or_404(Flowcell, flowcell_id=flowcell_id)
+        # Optimize Flowcell fetch with prefetched requests and related objects
+        flowcell = get_object_or_404(
+            Flowcell.objects.prefetch_related(
+                "requests__libraries__library_type",
+                "requests__libraries__library_protocol",
+                "requests__libraries__organism",
+                "requests__libraries__index_type",
+                "requests__samples__library_type",
+                "requests__samples__library_protocol",
+                "requests__samples__organism",
+                "requests__samples__index_type",
+            ),
+            flowcell_id=flowcell_id
+        )
 
         # Iterate over requests
         requests = dict()
